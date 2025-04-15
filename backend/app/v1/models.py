@@ -1,5 +1,4 @@
-# from v1.utils.database import Base
-from typing import Annotated, Optional
+from typing import Optional
 from sqlmodel import Field, SQLModel, Relationship
 
 
@@ -9,9 +8,6 @@ class User(SQLModel, table=True):
     last_name: str | None = None
     is_active: bool = Field(default=False)
 
-    # otp: "OTP" = Relationship(
-    #     back_populates="user", sa_relationship_kwargs={"uselist=False"}
-    # )
     farmer: Optional["Farmer"] = Relationship(back_populates="user")
 
 
@@ -31,4 +27,3 @@ class OTP(SQLModel, table=True):
         foreign_key="user.phone_no",
     )
     otp: int = Field(nullable=False, ge=1000, le=9999)
-    # user: User = Relationship(back_populates="otp")

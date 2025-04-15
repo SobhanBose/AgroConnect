@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from app.v1.auth import schemas, responseModels
 from app.v1.utils import database
 from app.v1.auth.managers import OTPManager
 from app.v1 import models
-from sqlmodel import select
 
 
 router = APIRouter()
