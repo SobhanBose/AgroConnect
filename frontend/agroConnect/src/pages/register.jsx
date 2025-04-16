@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-export default function Login(){
+export default function Register(){
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
     const [otpSent, setOtpSent] = useState(false);
@@ -29,7 +29,7 @@ export default function Login(){
     return (
         <div className="w-screen h-screen flex items-center justify-center px-4 bg-green-50">
             <div className="w-full sm:w-3/6 bg-cyan-50 p-6 rounded-2xl shadow-2xl">
-                <h2 className="text-4xl font-bold text-center text-green-700 mb-6">Login</h2>
+                <h2 className="text-4xl font-bold text-center text-green-700 mb-6">Register</h2>
 
                 
                     {
@@ -110,7 +110,7 @@ export default function Login(){
                         )
                         
                     }
-                    <p className='text-sm text-center mt-3'>Don't have an account ? <Link className='text-blue-600 text-sm font-medium' to='../register'>Create Account</Link></p>
+                    <p className='text-sm text-center mt-3'>Already have an account ? <Link className='text-blue-600 text-sm font-medium' to='../login'>Login</Link></p>
 
                 
             </div>
