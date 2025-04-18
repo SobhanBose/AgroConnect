@@ -3,6 +3,7 @@ import {RouterProvider, createBrowserRouter, createRoutesFromElements, Route, Na
 import './App.css'
 import Login from './pages/login'
 import Register from './pages/register'
+import FarmerProfile from './pages/farmerProfile'
 
 
 const router = createBrowserRouter(createRoutesFromElements(
@@ -10,8 +11,8 @@ const router = createBrowserRouter(createRoutesFromElements(
     <Route index />
     <Route path='login' element={<Login />} />
     <Route path='register' element={<Register />} />
-    <Route path='farmer/:id' >
-      <Route path='dashboard' />
+    <Route path='farmer' >
+      <Route path='dashboard' element={<FarmerProfile />} />
       <Route path='listings'>
         <Route path='product/:id' />
       </Route>
