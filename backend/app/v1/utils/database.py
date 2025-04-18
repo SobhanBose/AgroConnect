@@ -3,11 +3,12 @@ from typing import Annotated
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app/v1/database.db"
-# SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://admin:admin@34.131.168.232:5432/ehab"
+from app.v1.main import CONFIG
 
-# engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SQLALCHEMY_DATABASE_URL = CONFIG.DATABASE_URL
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 
 def create_db_and_tables():
