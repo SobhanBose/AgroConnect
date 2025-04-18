@@ -1,11 +1,11 @@
 from typing import Annotated
-
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
+from app.v1.config import settings
 
-from app.v1.main import CONFIG
+# from app.v1.main import CONFIG
 
-SQLALCHEMY_DATABASE_URL = CONFIG.DATABASE_URL
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 # engine = create_engine(SQLALCHEMY_DATABASE_URL)
