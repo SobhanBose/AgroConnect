@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 from dotenv import load_dotenv
 
 from app.v1.utils import database
@@ -13,9 +13,9 @@ def on_startup():
     database.create_db_and_tables()
 
 
-@app.get("/")
+@app.get("/", status_code=status.HTTP_200_OK)
 def read_root():
-    return {"Hello": "World"}
+    return HTTPException(status_code=status.HTTP_200_OK, detail="Welcome to the API")
 
 
 app.include_router(
