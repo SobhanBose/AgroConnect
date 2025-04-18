@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel
+from app.v1.utils.HTTPStatus import HTTPStatusCodes
 
 
 class ShowUser(SQLModel):
@@ -10,7 +11,13 @@ class ShowUser(SQLModel):
     model_config = {"from_attributes": True}
 
 
-class ShowFarmer(ShowUser):
+class ShowFarmer(SQLModel):
     description: str | None = None
+    user: ShowUser
 
     model_config = {"from_attributes": True}
+
+
+class HTTPExceptionResponse(SQLModel):
+    status_code: int
+    detail: str

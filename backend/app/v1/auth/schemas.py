@@ -2,11 +2,6 @@ from sqlmodel import SQLModel, Field
 from pydantic import BaseModel
 
 
-class RegisterOTPRequest(SQLModel):
-    phone_no: int = Field(nullable=False, ge=1000000000, le=9999999999)
-    type: str = Field(nullable=False, max_length=50)
-
-
 class RegisterConsumerUpdate(SQLModel):
     phone_no: int = Field(nullable=False, ge=1000000000, le=9999999999)
     first_name: str = Field(nullable=False, max_length=50)

@@ -8,13 +8,12 @@ from app.v1 import models
 router = APIRouter()
 
 
-@router.post("/register/request-otp", status_code=status.HTTP_201_CREATED)
-def register(request: schemas.RegisterOTPRequest, db: database.SessionDep):
+@router.post("/register/{user_type}/request-otp", status_code=status.HTTP_201_CREATED, response_model=responseModels.HTTPExceptionResponse)
+def register(request: schemas.OTPRequest, user_type: str, db: database.SessionDep) -> HTTPException:
     try:
         user = db.get(models.User, request.phone_no)
     except Exception as e:
-        print(e)
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error",
         )
@@ -26,14 +25,15 @@ def register(request: schemas.RegisterOTPRequest, db: database.SessionDep):
         )
         db.add(user)
 
-        if request.type == "farmer":
+        if user_type == "farmer":
             farmer = models.Farmer(
                 phone_no=request.phone_no,
                 is_active=False,
             )
             db.add(farmer)
-        else:
-            raise HTTPException(
+        elif user_type not in ["farmer", "consumer"]:
+            db.delete(user)
+            return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid user type",
             )
@@ -41,9 +41,9 @@ def register(request: schemas.RegisterOTPRequest, db: database.SessionDep):
         try:
             db.commit()
             db.refresh(user)
+            db.refresh(farmer)
         except Exception as e:
-            print(e)
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database error",
             )
@@ -53,23 +53,26 @@ def register(request: schemas.RegisterOTPRequest, db: database.SessionDep):
         return HTTPException(status_code=status.HTTP_200_OK, detail="User registered successfully")
 
     elif user.is_active:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User already registered",
         )
 
 
-@router.post("/register/verify-otp", response_model=responseModels.ShowUser, status_code=status.HTTP_200_OK)
-def verify_otp(request: schemas.OTPVerificationRequest, db: database.SessionDep) -> models.User:
+@router.post("/register/activate", response_model=responseModels.HTTPExceptionResponse, status_code=status.HTTP_200_OK)
+def activate(request: schemas.OTPVerificationRequest, db: database.SessionDep) -> HTTPException:
     """Verify OTP for a user"""
     if OTPManager.verify_otp(phone_no=request.phone_no, otp=request.otp, db=db):
         user = db.get(models.User, request.phone_no)
 
         if not user:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
+
+        if user.is_ative:
+            return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already active.")
 
         user.is_active = True
 
@@ -78,21 +81,21 @@ def verify_otp(request: schemas.OTPVerificationRequest, db: database.SessionDep)
             db.commit()
             db.refresh(user)
         except Exception as e:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database error",
             )
 
-        return user
+        return HTTPException(status_code=status.HTTP_200_OK, detail="User activated successfully")
     else:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid OTP",
         )
 
 
-@router.post("/register/resend-otp", status_code=status.HTTP_200_OK)
-def resend_otp(request: schemas.OTPRequest, db: database.SessionDep):
+@router.post("/register/resend-otp", status_code=status.HTTP_200_OK, response_model=responseModels.HTTPExceptionResponse)
+def resend_otp(request: schemas.OTPRequest, db: database.SessionDep) -> HTTPException:
     """Resend OTP to a user"""
     try:
         OTPManager.generate_otp(otp_length=4, phone_no=request.phone_no, db=db)
@@ -102,13 +105,13 @@ def resend_otp(request: schemas.OTPRequest, db: database.SessionDep):
     return HTTPException(status_code=status.HTTP_200_OK, detail="OTP resent successfully")
 
 
-@router.post("/register/update-consumer", response_model=responseModels.ShowUser, status_code=status.HTTP_200_OK)
-def update_user(request: schemas.RegisterConsumerUpdate, db: database.SessionDep) -> models.User:
+@router.post("/register/update-consumer", response_model=responseModels.HTTPExceptionResponse, status_code=status.HTTP_200_OK)
+def update_user(request: schemas.RegisterConsumerUpdate, db: database.SessionDep) -> HTTPException:
     """Update user details"""
     user = db.get(models.User, request.phone_no)
 
     if not user:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
@@ -121,47 +124,45 @@ def update_user(request: schemas.RegisterConsumerUpdate, db: database.SessionDep
         db.commit()
         db.refresh(user)
     except Exception as e:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error",
         )
 
-    return user
+    return HTTPException(status_code=status.HTTP_200_OK, detail="Details updated successfully")
 
 
-@router.post("/register/update-farmer", response_model=responseModels.ShowUser, status_code=status.HTTP_200_OK)
-def update_farmer(request: schemas.RegisterFarmerUpdate, db: database.SessionDep) -> models.User:
+@router.post("/register/update-farmer", response_model=responseModels.HTTPExceptionResponse, status_code=status.HTTP_200_OK)
+def update_farmer(request: schemas.RegisterFarmerUpdate, db: database.SessionDep) -> HTTPException:
     """Update farmer details"""
-    user = db.get(models.User, request.phone_no)
     farmer = db.get(models.Farmer, request.phone_no)
 
-    if not user:
+    if not farmer:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
 
-    user.first_name = request.first_name
-    user.last_name = request.last_name
+    farmer.user.first_name = request.first_name
+    farmer.user.last_name = request.last_name
     farmer.description = request.description
 
     try:
-        db.add(user)
         db.add(farmer)
         db.commit()
-        db.refresh(user)
         db.refresh(farmer)
     except Exception as e:
-        raise HTTPException(
+        db.rollback()
+        return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error",
         )
 
-    return user
+    return HTTPException(status_code=status.HTTP_200_OK, detail="Details updated successfully")
 
 
-@router.post("/request-otp", status_code=status.HTTP_200_OK)
-def request_otp(request: schemas.OTPRequest, db: database.SessionDep):
+@router.post("/request-otp", status_code=status.HTTP_200_OK, response_model=responseModels.HTTPExceptionResponse)
+def request_otp(request: schemas.OTPRequest, db: database.SessionDep) -> HTTPException:
     try:
         OTPManager.generate_otp(otp_length=4, phone_no=request.phone_no, db=db)
     except Exception as e:
@@ -177,7 +178,7 @@ def login(request: schemas.OTPVerificationRequest, db: database.SessionDep) -> m
         user = db.get(models.User, request.phone_no)
         return user
     else:
-        raise HTTPException(
+        return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid OTP",
         )
