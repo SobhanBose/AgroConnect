@@ -2,12 +2,12 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+# load_dotenv()
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = os.getenv("APP_NAME")
-    DATABASE_URL: str = os.getenv("DATABASE_URL")
+    APP_NAME: str
+    DATABASE_URL: str
 
     class Config:
         env_file = ".env"

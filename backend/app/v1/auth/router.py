@@ -13,6 +13,7 @@ def register(request: schemas.OTPRequest, user_type: str, db: database.SessionDe
     try:
         user = db.get(models.User, request.phone_no)
     except Exception as e:
+        print(e)
         return HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error",
@@ -41,8 +42,10 @@ def register(request: schemas.OTPRequest, user_type: str, db: database.SessionDe
         try:
             db.commit()
             db.refresh(user)
-            db.refresh(farmer)
+            if user_type == "farmer":
+                db.refresh(farmer)
         except Exception as e:
+            print(e)
             return HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Database error",
@@ -71,7 +74,7 @@ def activate(request: schemas.OTPVerificationRequest, db: database.SessionDep) -
                 detail="User not found",
             )
 
-        if user.is_ative:
+        if user.is_active:
             return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already active.")
 
         user.is_active = True
