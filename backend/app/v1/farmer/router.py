@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 from sqlmodel import select
-from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 import typing
 
@@ -36,6 +35,9 @@ def get_farmer(phone_no: int, db: SessionDep) -> responseModels.ShowFarmer:
     return farmer
 
 
+# Handling produce
+
+
 @router.get("/{phone_no}/produce", response_model=list[responseModels.ShowProduce], status_code=status.HTTP_200_OK)
 def get_produce(phone_no: int, db: SessionDep) -> list[responseModels.ShowProduce]:
     """
@@ -60,12 +62,40 @@ def get_produce(phone_no: int, db: SessionDep) -> list[responseModels.ShowProduc
         print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail="Database error while fetching produce",
         )
     return produces
 
 
-@router.post("/{phone_no}/add-produce", response_model=responseModels.ShowProduce, status_code=status.HTTP_201_CREATED)
+@router.get("/{phone_no}/produce/search", response_model=responseModels.ShowProduce, status_code=status.HTTP_200_OK)
+def get_produce_by_name(phone_no: int, produce_name: str, db: SessionDep) -> responseModels.ShowProduce:
+    """
+    Get produce by name for the farmer.
+    """
+    farmer = db.get(models.Farmer, phone_no)
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Farmer not found",
+        )
+
+    if not farmer.user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Farmer is not active",
+        )
+
+    produce = db.exec(select(models.Produce).where(models.Produce.name == produce_name)).first()
+    if not produce:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produce not found",
+        )
+
+    return produce
+
+
+@router.post("/{phone_no}/produce/add", response_model=responseModels.ShowProduce, status_code=status.HTTP_201_CREATED)
 def add_produce(phone_no: int, produce: schemas.ProduceCreate, db: SessionDep) -> responseModels.ShowProduce:
     """
     Add produce for the farmer.
@@ -83,28 +113,144 @@ def add_produce(phone_no: int, produce: schemas.ProduceCreate, db: SessionDep) -
         )
 
     try:
+        existing_produce = db.exec(select(models.Produce).where(models.Produce.name == produce.name, models.Produce.farmer_phone_no == phone_no)).first()
+        if existing_produce:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Produce with this name already exists.",
+            )
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while checking existing produce",
+        )
+
+    try:
         produce = models.Produce(**produce.model_dump(mode="json"), farmer_phone_no=phone_no)
         db.add(produce)
         db.commit()
         db.refresh(produce)
-    except IntegrityError as integrity_error:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Produce with this name already exists.",
-        )
     except Exception as e:
         db.rollback()
         print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail="Database error while adding produce",
         )
 
     return produce
 
 
-@router.post("/{phone_no}/add-harvest", response_model=responseModels.ShowHarvest, status_code=status.HTTP_201_CREATED)
+@router.get("/{phone_no}/produce/{produce_id}", response_model=responseModels.ShowProduce, status_code=status.HTTP_200_OK)
+def get_produce_by_id(phone_no: int, produce_id: str, db: SessionDep) -> responseModels.ShowProduce:
+    """
+    Get produce by ID for the farmer.
+    """
+    farmer = db.get(models.Farmer, phone_no)
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Farmer not found",
+        )
+
+    if not farmer.user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Farmer is not active",
+        )
+
+    produce = db.get(models.Produce, UUID(produce_id))
+    if not produce:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produce not found",
+        )
+
+    return produce
+
+
+# Handling harvests
+
+
+@router.get("/{phone_no}/harvest", response_model=list[responseModels.HarvestGrouped], status_code=status.HTTP_200_OK)
+def get_harvest(phone_no: int, db: SessionDep) -> list[responseModels.HarvestGrouped]:
+    """
+    Get all harvest for the farmer.
+    """
+    farmer = db.get(models.Farmer, phone_no)
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Farmer not found",
+        )
+    if not farmer.user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Farmer not active",
+        )
+
+    try:
+        produces = db.exec(select(models.Produce).where(models.Produce.farmer_phone_no == phone_no)).all()
+        grouped_harvests = []
+
+        for produce in produces:
+            harvests = sorted(produce.harvests, key=lambda h: h.harvest_date)
+
+            if not harvests:
+                continue
+
+            grouped_harvests.append({"produce": produce, "harvests": harvests})
+
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while fetching harvests",
+        )
+
+    return grouped_harvests
+
+
+@router.get("/{phone_no}/harvest/search", response_model=responseModels.HarvestGrouped, status_code=status.HTTP_200_OK)
+def get_harvest_by_produce_name(phone_no: int, produce_name: str, db: SessionDep) -> responseModels.HarvestGrouped:
+    """
+    Get all harvest for a specific produce for the farmer.
+    """
+    farmer = db.get(models.Farmer, phone_no)
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Farmer not found",
+        )
+    if not farmer.user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Farmer not active",
+        )
+
+    produce = db.exec(select(models.Produce).where(models.Produce.name == produce_name)).first()
+    if not produce:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produce not found",
+        )
+
+    try:
+        harvests = sorted(produce.harvests, key=lambda h: h.harvest_date)
+
+        harvest_grouped = {"produce": produce, "harvests": harvests}
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while fetching harvests",
+        )
+
+    return harvest_grouped
+
+
+@router.post("/{phone_no}/harvest/add", response_model=responseModels.ShowHarvest, status_code=status.HTTP_201_CREATED)
 def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -> responseModels.ShowHarvest:
     """
     Add harvest for the farmer.
@@ -149,7 +295,7 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Database error",
+                detail="Database error while updating harvest",
             )
 
         return existing_harvest
@@ -171,16 +317,16 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail="Database error while adding harvest",
         )
 
     return harvest
 
 
-@router.get("/{phone_no}/harvest", response_model=list[responseModels.HarvestGrouped], status_code=status.HTTP_200_OK)
-def get_harvest(phone_no: int, db: SessionDep) -> list[responseModels.HarvestGrouped]:
+@router.get("/{phone_no}/harvest/{produce_id}", response_model=responseModels.HarvestGrouped, status_code=status.HTTP_200_OK)
+def get_harvest_by_produce(phone_no: int, produce_id: str, db: SessionDep) -> responseModels.HarvestGrouped:
     """
-    Get all harvest for the farmer.
+    Get all harvest for a specific produce for the farmer.
     """
     farmer = db.get(models.Farmer, phone_no)
     if not farmer:
@@ -194,23 +340,65 @@ def get_harvest(phone_no: int, db: SessionDep) -> list[responseModels.HarvestGro
             detail="Farmer not active",
         )
 
+    produce = db.get(models.Produce, UUID(produce_id))
+    if not produce:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produce not found",
+        )
+
     try:
-        produces = db.exec(select(models.Produce).where(models.Produce.farmer_phone_no == phone_no)).all()
-        grouped_harvests = []
+        harvests = sorted(produce.harvests, key=lambda h: h.harvest_date)
 
-        for produce in produces:
-            harvests = db.exec(select(models.Harvest).where(models.Harvest.produce_id == produce.id)).all()
-
-            if not harvests:
-                continue
-
-            grouped_harvests.append({"produce": produce, "harvests": harvests})
-
+        harvest_grouped = {"produce": produce, "harvests": harvests}
     except Exception as e:
         print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database error",
+            detail="Database error while fetching harvests",
         )
 
-    return grouped_harvests
+    return harvest_grouped
+
+
+@router.get("/{phone_no}/harvest/{produce_id}/by-hdate", response_model=responseModels.HarvestGrouped, status_code=status.HTTP_200_OK)
+def get_harvest_by_date(phone_no: int, produce_id: str, harvest_date: str, db: SessionDep) -> responseModels.HarvestGrouped:
+    """
+    Get all harvest for a specific produce for the farmer by date.
+    """
+    farmer = db.get(models.Farmer, phone_no)
+    if not farmer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Farmer not found",
+        )
+    if not farmer.user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Farmer not active",
+        )
+
+    produce = db.get(models.Produce, UUID(produce_id))
+    if not produce:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Produce not found",
+        )
+
+    try:
+        harvests = db.exec(select(models.Harvest).where(models.Harvest.produce_id == produce.id, models.Harvest.harvest_date == harvest_date)).all()
+        if not harvests:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No harvest found for the given date",
+            )
+
+        harvest_grouped = {"produce": produce, "harvests": harvests}
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error while fetching harvests",
+        )
+
+    return harvest_grouped
