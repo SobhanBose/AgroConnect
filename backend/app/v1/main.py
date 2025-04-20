@@ -5,6 +5,7 @@ from app.v1.utils import database
 from app.v1.dev_utils import seed
 from app.v1.auth.router import router as auth_router
 from app.v1.farmer.router import router as farmer_router
+from app.v1.consumer.router import router as consumer_router
 
 app = FastAPI()
 
@@ -23,3 +24,4 @@ def home():
 
 app.include_router(auth_router)
 app.include_router(farmer_router)
+app.include_router(consumer_router)
