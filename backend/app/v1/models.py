@@ -37,7 +37,7 @@ class OTP(SQLModel, table=True):
 
 class Produce(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
-    name: str = Field(nullable=False, max_length=255, index=True)
+    name: str = Field(nullable=False, unique=True, max_length=255, index=True)
     description: str | None = Field(max_length=255)
     image_path: str = Field(default="https://placehold.co/200", max_length=255)
     tag: str = Column(SQLEnum(produceTag, native_enum=False), nullable=False)

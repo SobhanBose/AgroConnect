@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 import typing
 
@@ -54,7 +55,6 @@ def get_produce(phone_no: int, db: SessionDep) -> list[responseModels.ShowProduc
         )
 
     try:
-        # produces = db.exec(select(models.Produce).where(models.Produce.farmer_phone_no == phone_no)).all()
         produces = farmer.inventory
     except Exception as e:
         print(e)
@@ -87,9 +87,15 @@ def add_produce(phone_no: int, produce: schemas.ProduceCreate, db: SessionDep) -
         db.add(produce)
         db.commit()
         db.refresh(produce)
-    except Exception as e:
-        print(e)
+    except IntegrityError as integrity_error:
         db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Produce with this name already exists.",
+        )
+    except Exception as e:
+        db.rollback()
+        print(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error",
@@ -112,7 +118,7 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
     if not farmer.user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Farmer is not active",
+            detail="Farmer not active",
         )
 
     produce = db.get(models.Produce, harvest.produce_id)
@@ -185,7 +191,7 @@ def get_harvest(phone_no: int, db: SessionDep) -> list[responseModels.HarvestGro
     if not farmer.user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Farmer is not active",
+            detail="Farmer not active",
         )
 
     try:
