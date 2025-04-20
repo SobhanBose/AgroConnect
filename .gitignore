@@ -175,3 +175,6 @@ cython_debug/
 
 # Database Files
 *.db*
+
+#dev-utils
+backend/app/v1/dev_utils

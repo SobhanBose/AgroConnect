@@ -8,6 +8,7 @@ import os
 class Settings(BaseSettings):
     APP_NAME: str
     DATABASE_URL: str
+    DEV_MODE: bool
 
     class Config:
         env_file = ".env"
