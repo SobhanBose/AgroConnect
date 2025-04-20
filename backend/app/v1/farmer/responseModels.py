@@ -33,7 +33,7 @@ class ShowProduce(SQLModel):
     description: str | None = None
     image_path: str | None = None
     tag: str | None = None
-    farmer: ShowFarmer
+    # farmer: ShowFarmer
     harvest: showHarvestRef | None = None
 
     model_config = {"from_attributes": True}
@@ -51,3 +51,8 @@ class ShowHarvest(SQLModel):
 
 
 ShowProduce.model_rebuild()
+
+
+class HarvestGrouped(SQLModel):
+    produce: ShowProduce
+    harvests: list[ShowHarvest]

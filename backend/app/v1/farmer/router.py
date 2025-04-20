@@ -171,8 +171,8 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
     return harvest
 
 
-@router.get("/{phone_no}/harvest", response_model=dict[responseModels.ShowProduce, responseModels.ShowHarvest], status_code=status.HTTP_200_OK)
-def get_harvest(phone_no: int, db: SessionDep) -> dict[responseModels.ShowProduce, responseModels.ShowHarvest]:
+@router.get("/{phone_no}/harvest", response_model=list[responseModels.HarvestGrouped], status_code=status.HTTP_200_OK)
+def get_harvest(phone_no: int, db: SessionDep) -> list[responseModels.HarvestGrouped]:
     """
     Get all harvest for the farmer.
     """
@@ -189,7 +189,17 @@ def get_harvest(phone_no: int, db: SessionDep) -> dict[responseModels.ShowProduc
         )
 
     try:
-        harvests = {produce: produce.harvest for produce in farmer.inventory}
+        produces = db.exec(select(models.Produce).where(models.Produce.farmer_phone_no == phone_no)).all()
+        grouped_harvests = []
+
+        for produce in produces:
+            harvests = db.exec(select(models.Harvest).where(models.Harvest.produce_id == produce.id)).all()
+
+            if not harvests:
+                continue
+
+            grouped_harvests.append({"produce": produce, "harvests": harvests})
+
     except Exception as e:
         print(e)
         raise HTTPException(
@@ -197,4 +207,4 @@ def get_harvest(phone_no: int, db: SessionDep) -> dict[responseModels.ShowProduc
             detail="Database error",
         )
 
-    return harvests
+    return grouped_harvests
