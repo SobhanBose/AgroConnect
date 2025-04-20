@@ -5,7 +5,7 @@ from app.v1.auth.managers import OTPManager
 from app.v1 import models
 
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register/{user_type}/request-otp", status_code=status.HTTP_201_CREATED, response_model=responseModels.HTTPExceptionResponse)
