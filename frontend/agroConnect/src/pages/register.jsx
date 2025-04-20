@@ -1,23 +1,40 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-export default function Register(){
+export default function Register() {
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
     const [otpSent, setOtpSent] = useState(false);
+    const [wrong, setWrong] = useState(false);
     const [verified, setVerified] = useState(false);
     const [otp, setOtp] = useState('');
 
-    const handleSendOtp = (e) => {
+    const  handleSendOtp = async (e) => {
         e.preventDefault();
         console.log('Phone:', phone, 'Role:', role);
-        
-        // const res = await fetch('end_point');
-        // if (res.ok) {
-        //     setOtpSent(true);
-        // }else{
 
-        // }
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/${role}/request-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: phone }), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                setOtpSent(true);
+                console.log('OTP Sent:', data);
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
     };
 
     const handleVerifyOtp = (e) => {
@@ -31,11 +48,11 @@ export default function Register(){
             <div className="w-full sm:w-3/6 bg-cyan-50 p-6 rounded-2xl shadow-2xl">
                 <h2 className="text-4xl font-bold text-center text-green-700 mb-6">Register</h2>
 
-                
-                    {
-                        !otpSent ? (
-                            <>
-                                <form onSubmit={handleSendOtp} className="space-y-5">
+
+                {
+                    !otpSent ? (
+                        <>
+                            <form onSubmit={handleSendOtp} className="space-y-5">
                                 {/* Phone Number */}
                                 <div>
                                     <label className="block text-left text-sm font-medium text-gray-700 mb-1 py-1">Phone Number</label>
@@ -63,7 +80,9 @@ export default function Register(){
                                         <option value="consumer">Consumer/Retailer</option>
                                     </select>
                                 </div>
-
+                                {
+                                wrong && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
+                            }
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
@@ -71,10 +90,10 @@ export default function Register(){
                                 >
                                     Send OTP
                                 </button>
-                                </form>
-                            </>
-                        ) : (
-                            <>
+                            </form>
+                        </>
+                    ) : (
+                        <>
                             <form onSubmit={handleSendOtp} className="space-y-5">
                                 {/* OTP field */}
                                 <div>
@@ -100,19 +119,19 @@ export default function Register(){
                                 >
                                     Resend OTP
                                 </button>
-                                </form>
+                            </form>
 
                             {
                                 !verified && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
                             }
-                            </>
+                        </>
 
-                        )
-                        
-                    }
-                    <p className='text-sm text-center mt-3'>Already have an account ? <Link className='text-blue-600 text-sm font-medium' to='../login'>Login</Link></p>
+                    )
 
-                
+                }
+                <p className='text-sm text-center mt-3'>Already have an account ? <Link className='text-blue-600 text-sm font-medium' to='../login'>Login</Link></p>
+
+
             </div>
         </div>
     );

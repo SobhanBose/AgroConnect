@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 export default function Login(){
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
+    const [otpSent, setOtpSent] = useState(true);
     const [verified, setVerified] = useState(false);
     const [otp, setOtp] = useState('');
 
