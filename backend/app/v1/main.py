@@ -1,4 +1,5 @@
 from fastapi import FastAPI, status, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.v1.config import settings
 from app.v1.utils import database
@@ -8,7 +9,14 @@ from app.v1.farmer.router import router as farmer_router
 from app.v1.consumer.router import router as consumer_router
 from app.v1.marketplace.router import router as marketplace_router
 
+
+cors_origins = ["*"]
+cors_methods = ["GET", "POST"]
+
+
 app = FastAPI()
+
+app.add_middleware(CORSMiddleware, allow_origins=cors_origins, allow_methods=cors_methods)
 
 
 @app.on_event("startup")
