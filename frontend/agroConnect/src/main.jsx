@@ -7,17 +7,23 @@ import Header from './components/header.jsx'
 import Footer from './components/footer.jsx'
 import Search from './pages/search.jsx'
 import ProductPage from './pages/productpage.jsx'
+import AIChat from "./pages/AIChat";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <div>
       <Header />
         <main>
-          <ProductPage />
+          {/* <AIChat role="farmer" /> */}
+          {/* or */}
+          <AIChat role="consumer" />
+          {/* <ProductPage /> */}
           {/* <Search /> */}
           {/* <Hero /> */}
         </main>
-      <Footer />
+        <Footer role="farmer" />
+        {/* or */}
+        {/* <Footer role="consumer" /> */}
     </div>
   </StrictMode>,
 )

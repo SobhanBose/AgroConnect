@@ -104,7 +104,7 @@ const ProductPage = () => {
   if (!product) return <div className="text-center mt-20">Loading...</div>;
 
   return (
-    <div className="mt-20 max-w-6xl mx-auto px-4 space-y-10">
+    <div className="mt-20 mb-12 max-w-6xl mx-auto px-4 space-y-10">
       <div className="flex items-center gap-2 text-sm text-gray-700 bg-green-50 p-3 rounded-md">
         <MapPin className="w-4 h-4 text-green-600" />
         Delivering to <span className="font-medium ml-1">Soumik Bag, Kolkata - 700001</span>
