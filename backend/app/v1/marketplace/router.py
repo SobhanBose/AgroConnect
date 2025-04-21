@@ -25,7 +25,7 @@ def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate",
     for produce in produces:
         if produce.harvests:
             latest_harvest = max(produce.harvests, key=lambda h: h.harvest_date)
-            res.append(responseModels.ShowProduceMinimal(id=produce.id, name=produce.name, image_path=produce.image_path, tag=produce.tag, rate=latest_harvest.rate, harvest_date=latest_harvest.harvest_date))
+            res.append(responseModels.ShowProduceMinimal(id=produce.id, name=produce.name, image_path=produce.image_path, tag=produce.tag, farmer=produce.farmer, rate=latest_harvest.rate, harvest_date=latest_harvest.harvest_date))
 
     if sortBy is None:
         return res
