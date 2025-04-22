@@ -8,6 +8,7 @@ from app.v1.auth.router import router as auth_router
 from app.v1.farmer.router import router as farmer_router
 from app.v1.consumer.router import router as consumer_router
 from app.v1.marketplace.router import router as marketplace_router
+from app.v1.cart.router import router as cart_router
 
 
 cors_origins = ["*"]
@@ -35,3 +36,4 @@ app.include_router(auth_router)
 app.include_router(farmer_router)
 app.include_router(consumer_router)
 app.include_router(marketplace_router)
+app.include_router(cart_router)
