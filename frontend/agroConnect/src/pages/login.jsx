@@ -1,29 +1,113 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../context/context';
 
 export default function Login(){
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
-    const [otpSent, setOtpSent] = useState(true);
+    const [otpSent, setOtpSent] = useState(false);
+    const [wrong, setWrong] = useState(false);
     const [verified, setVerified] = useState(false);
     const [otp, setOtp] = useState('');
+    const navigate = useNavigate();
+    const { setUser } = useUser();
 
-    const handleSendOtp = (e) => {
+    const  handleSendOtp = async (e) => {
         e.preventDefault();
         console.log('Phone:', phone, 'Role:', role);
-        
-        // const res = await fetch('end_point');
-        // if (res.ok) {
-        //     setOtpSent(true);
-        // }else{
 
-        // }
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/request-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: parseInt(phone) }), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                setOtpSent(true);
+                console.log('OTP Sent:', data);
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
     };
 
-    const handleVerifyOtp = (e) => {
+    const  handleVerifyOtp = async (e) => {
         e.preventDefault();
-        console.log('OTP', otp);
-        // Call your backend OTP API here
+        console.log('otp', otp);
+
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: parseInt(phone), otp: parseInt(otp) }), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                setUser({ phone, role });
+                if(role === 'farmer'){
+                    navigate('../farmer/editFarmerProfile')
+                }
+                else{
+                    navigate('../consumer/editConsumerProfile')
+                }
+                setVerified(true);
+
+
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
+    };
+
+    const  handleResendOtp = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/resend-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: parseInt(phone)}), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                
+                // if(role === 'farmer'){
+                //     navigate('../farmer/editFarmerProfile')
+                // }
+                // else{
+                //     navigate('../consumer/editConsumerProfile')
+                // }
+                // setVerified(true);
+
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
     };
 
     return (
@@ -75,14 +159,14 @@ export default function Login(){
                             </>
                         ) : (
                             <>
-                            <form onSubmit={handleSendOtp} className="space-y-5">
+                            <form onSubmit={handleVerifyOtp} className="space-y-5">
                                 {/* OTP field */}
                                 <div>
                                     <label className="block text-left text-sm font-medium text-gray-700 mb-1 py-1">Enter OTP</label>
                                     <input
                                         type="text"
                                         value={otp}
-                                        onChange={(e) => setotp(e.target.value)}
+                                        onChange={(e) => setOtp(e.target.value)}
                                         required
                                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         placeholder="Enter the OTP"
@@ -95,7 +179,8 @@ export default function Login(){
                                     Verify OTP
                                 </button>
                                 <button
-                                    type="submit"
+                                    onClick={handleResendOtp}
+                                    type="button"
                                     className="block mx-auto text-sm bg-blue-500 hover:bg-blue-600 hover:cursor-pointer text-white px-4 py-2 rounded-md transition duration-200"
                                 >
                                     Resend OTP
@@ -103,7 +188,7 @@ export default function Login(){
                                 </form>
 
                             {
-                                !verified && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
+                                wrong && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
                             }
                             </>
 

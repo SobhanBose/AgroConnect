@@ -1,14 +1,41 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useUser } from "../context/context";
+import { useParams } from "react-router-dom";
 
 export default function EditProduct() {
+    const { user } = useUser();
+    const [product, setProduct] = useState(null);
     const [form, setForm] = useState({
-        name: 'Satirtha',
-        price: '30',
-        description: 'nkfbhdkacb',
-        quantity: '2',
+        price: '0',
+        quantity: '0',
         date: null,
-        image: null,
-    })
+    });
+    const { id } = useParams();
+
+    useEffect(() => {
+        const fetchProduce = async () => {
+            try {
+                const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/produce/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    setProduct(data);
+                } else {
+                    console.error('Failed to fetch profile:', data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+
+        fetchProduce();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, files } = e.target
@@ -19,107 +46,101 @@ export default function EditProduct() {
         }
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        if (form.name && form.price && form.description && form.quantity && form.image) {
-            console.log(form)
-        } else {
-            alert('Please fill in all fields.')
+    const handleSubmit = async (e) => {
+
+        e.preventDefault();
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/harvest/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'produce_id': id,
+                    "qty_harvested": form.quantity,
+                    "harvest_date": new Date(form.date).toISOString().split('T')[0],
+                    "rate": form.price
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                console.log('ok');
+            } else {
+                console.error('Failed to fetch profile:', data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
         }
-    }
+    };
 
 
     return (
         <>
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white p-6 rounded-2xl shadow-md w-full max-w-2xl space-y-5"
-            >
-                <h2 className="text-3xl font-bold mb-4 text-left w-full">Add New Harvest</h2>
-
-                <div>
-                    <label className="block text-sm font-medium">Product Name</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={form.name}
-                        onChange={handleChange}
-                        className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="e.g., Fresh Tomatoes"
-                        required
+            <div>
+                {product && <div className="p-6">
+                    <h2 className="text-2xl font-bold mb-4">{product.name}</h2>
+                    <img
+                        src={product.image_path}
+                        alt={product.name}
+                        className="w-full max-w-md h-64 object-cover rounded-md mb-4"
                     />
-                </div>
+                    <p className="text-gray-700">{product.description}</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium">Price (₹)</label>
-                        <input
-                            type="number"
-                            name="price"
-                            value={form.price}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium">Quantity (kg/units)</label>
-                        <input
-                            type="number"
-                            name="quantity"
-                            value={form.quantity}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium">Harvest Date</label>
-                        <input
-                            type="date"
-                            name="harvestDate"
-                            value={form.date}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium">Description</label>
-                    <textarea
-                        name="description"
-                        value={form.description}
-                        onChange={handleChange}
-                        rows={4}
-                        className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Write a short description of the product..."
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium">Upload Image</label>
-                    <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="w-full mt-1 border border-gray-300 p-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition cursor-pointer"
+                </div>}
+                <form
+                    onSubmit={handleSubmit}
+                    className="bg-white p-6 rounded-2xl shadow-md w-full max-w-2xl space-y-5"
                 >
-                    Add Product
-                </button>
-            </form>
+                    <h2 className="text-3xl font-bold mb-4 text-left w-full">Add New Harvest</h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium">Price (₹)</label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={form.price}
+                                onChange={handleChange}
+                                className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium">Quantity (kg/units)</label>
+                            <input
+                                type="number"
+                                name="quantity"
+                                value={form.quantity}
+                                onChange={handleChange}
+                                className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium">Harvest Date</label>
+                            <input
+                                type="date"
+                                name="date"
+                                value={form.date}
+                                onChange={handleChange}
+                                className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition cursor-pointer"
+                    >
+                        Add Product
+                    </button>
+                </form>
+            </div>
         </>
     )
 }

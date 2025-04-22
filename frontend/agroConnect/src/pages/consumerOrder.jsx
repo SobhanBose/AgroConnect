@@ -1,10 +1,24 @@
 import { useState } from "react";
 import ProductCard from "../components/productCard";
-import OrderCard from "../components/FarmerOrderCard";
+import OrderCard from "../components/ConsumerOrderCard";
 
 
 export default function ConsumerOrder(){
     const [searchTerm, setSearchTerm] = useState("");
+
+const order =    {
+        orderId: "ORD123",
+        orderDate: "2025-04-18T10:20:00Z",
+        status: "Delivered",
+        totalPrice: 89.75,
+        products: [
+            { name: "Tomato", quantity: 2 },
+            { name: "Potato", quantity: 1 },
+            { name: "Onion", quantity: 3 },
+            { name: "Carrot", quantity: 1 },
+        ]
+    }
+    
     
         const products = [
             {
@@ -51,7 +65,7 @@ export default function ConsumerOrder(){
     
                 <div className="flex flex-wrap justify-center gap-5 w-full overflow-scroll">
                     {filteredProducts.map(product => (
-                        <OrderCard productName={product.name} quantity={2} price={59.99} />
+                        <OrderCard order={order} />
                     ))}
                 </div>
             </div>

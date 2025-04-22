@@ -1,35 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "../context/context";
+
 import ProductCard from "../components/productCard";
 
 export default function FarmerProduct() {
     const [searchTerm, setSearchTerm] = useState("");
+    const { user } = useUser();
+    const [products, setProducts] = useState([]);
 
-    const products = [
-        {
-            _id: '1',
-            name: 'Fresh Tomatoes',
-            price: 40,
-            imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg',
-        },
-        {
-            _id: '2',
-            name: 'Long Brinjals',
-            price: 30,
-            imageUrl: 'https://fpsstore.in/cdn/shop/products/BrinjalLong.jpg?v=1641627205',
-        },
-        {
-            _id: '3',
-            name: 'Green Chilies',
-            price: 20,
-            imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Green_Chillies.jpg',
-        },
-        {
-            _id: '4',
-            name: 'Red Onions',
-            price: 35,
-            imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Red_Onions.jpg',
-        },
-    ];
+    useEffect(() => {
+        const fetchFarmerProduce = async () => {
+          try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/produce`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+      
+            const data = await res.json();
+      
+            if (res.ok) {
+              setProducts(data);
+            } else {
+              console.error('Failed to fetch profile:', data);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
+      
+        fetchFarmerProduce();
+      }, []);
 
     const filteredProducts = products.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -51,9 +53,8 @@ export default function FarmerProduct() {
                 {filteredProducts.map(product => (
                     
                     <ProductCard
-                        key={product._id}
+                        key={product.id}
                         product={product}
-                        onEdit={(product) => console.log("Edit:", product)}
                         onDelete={(id) => console.log("Delete ID:", id)}
                     />
                 ))}

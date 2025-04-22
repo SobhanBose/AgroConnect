@@ -1,32 +1,50 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useUser } from "../context/context";
+
 
 export default function AddProduct() {
+    const { user } = useUser();
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     const [form, setForm] = useState({
         name: '',
-        price: '',
         description: '',
-        quantity: '',
-        harvestDate: '',
-        image: null,
+        image: '',
     })
 
     const handleChange = (e) => {
         const { name, value, files } = e.target
-        if (name === 'image') {
-            setForm((prev) => ({ ...prev, image: files[0] }))
-        } else {
-            setForm((prev) => ({ ...prev, [name]: value }))
-        }
+        setForm((prev) => ({ ...prev, [name]: value }))
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        if (form.name && form.price && form.description && form.quantity && form.image) {
-            console.log(form)
-        } else {
-            alert('Please fill in all fields.')
+    const handleSubmit = async (e) => {
+        
+        e.preventDefault();
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/produce/add`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'name': form.name,
+                    'description': form.description,
+                    'image_path': form.image,
+                    'tag': "Organic"
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                console.log('ok');
+            } else {
+                console.error('Failed to fetch profile:', data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
         }
-    }
+    };
 
 
     return (
@@ -50,44 +68,6 @@ export default function AddProduct() {
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium">Price (₹)</label>
-                        <input
-                            type="number"
-                            name="price"
-                            value={form.price}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium">Quantity (kg/units)</label>
-                        <input
-                            type="number"
-                            name="quantity"
-                            value={form.quantity}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium">Harvest Date</label>
-                        <input
-                            type="date"
-                            name="harvestDate"
-                            value={form.harvestDate}
-                            onChange={handleChange}
-                            className="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                    </div>
-                </div>
-
                 <div>
                     <label className="block text-sm font-medium">Description</label>
                     <textarea
@@ -102,9 +82,9 @@ export default function AddProduct() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium">Upload Image</label>
+                    <label className="block text-sm font-medium">Give Image URL</label>
                     <input
-                        type="file"
+                        type="url"
                         name="image"
                         accept="image/*"
                         onChange={handleChange}

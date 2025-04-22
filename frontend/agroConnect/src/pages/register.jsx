@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../context/context';
 
 export default function Register() {
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [wrong, setWrong] = useState(false);
-    const [verified, setVerified] = useState(false);
     const [otp, setOtp] = useState('');
+    const navigate = useNavigate();
+    const { setUser } = useUser();
 
     const  handleSendOtp = async (e) => {
         e.preventDefault();
@@ -19,7 +21,7 @@ export default function Register() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ phone_no: phone }), // send the phone number
+                body: JSON.stringify({ phone_no: parseInt(phone) }), // send the phone number
             });
     
             const data = await res.json();
@@ -37,10 +39,74 @@ export default function Register() {
         }
     };
 
-    const handleVerifyOtp = (e) => {
+    const  handleVerifyOtp = async (e) => {
         e.preventDefault();
-        console.log('OTP', otp);
-        // Call your backend OTP API here
+        console.log('otp', otp);
+
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/activate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: parseInt(phone), otp: parseInt(otp) }), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                setUser({ phone, role });
+                if(role === 'farmer'){
+                    navigate('../farmer/editFarmerProfile')
+                }
+                else{
+                    navigate('../consumer/editConsumerProfile')
+                }
+                setVerified(true);
+
+
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
+    };
+
+    const  handleResendOtp = async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/resend-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_no: parseInt(phone)}), // send the phone number
+            });
+    
+            const data = await res.json();
+    
+            if (res.ok) {
+                
+                // if(role === 'farmer'){
+                //     navigate('../farmer/editFarmerProfile')
+                // }
+                // else{
+                //     navigate('../consumer/editConsumerProfile')
+                // }
+                // setVerified(true);
+
+            } else {
+                setWrong(true);
+                console.error('Failed to send OTP:', data);
+            }
+        } catch (error) {
+            setWrong(true);
+            console.error('Error:', error);
+        }
     };
 
     return (
@@ -77,7 +143,7 @@ export default function Register() {
                                     >
                                         <option value="">-- Choose Role --</option>
                                         <option value="farmer">Farmer</option>
-                                        <option value="consumer">Consumer/Retailer</option>
+                                        <option value="consumer">Consumer</option>
                                     </select>
                                 </div>
                                 {
@@ -94,7 +160,7 @@ export default function Register() {
                         </>
                     ) : (
                         <>
-                            <form onSubmit={handleSendOtp} className="space-y-5">
+                            <form className="space-y-5">
                                 {/* OTP field */}
                                 <div>
                                     <label className="block text-left text-sm font-medium text-gray-700 mb-1 py-1">Enter OTP</label>
@@ -102,19 +168,20 @@ export default function Register() {
                                         type="text"
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value)}
-                                        required
                                         className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                                         placeholder="Enter the OTP"
                                     />
                                 </div>
                                 <button
+                                    onClick={handleVerifyOtp}
                                     type="submit"
                                     className="w-full bg-blue-500 hover:bg-blue-600 hover:cursor-pointer text-white font-semibold px-4 py-2 rounded-md transition duration-200"
                                 >
                                     Verify OTP
                                 </button>
                                 <button
-                                    type="submit"
+                                    onClick={handleResendOtp}
+                                    type="button"
                                     className="block mx-auto text-sm bg-blue-500 hover:bg-blue-600 hover:cursor-pointer text-white px-4 py-2 rounded-md transition duration-200"
                                 >
                                     Resend OTP
@@ -122,7 +189,7 @@ export default function Register() {
                             </form>
 
                             {
-                                !verified && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
+                                wrong && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
                             }
                         </>
 
