@@ -37,7 +37,7 @@ class Produce(SQLModel, table=True):
     description: str | None = Field(max_length=255)
     image_path: str = Field(default="https://placehold.co/200", max_length=255)
     tag: str = Column(SQLEnum(produceTag, native_enum=False), nullable=False)
-    farmer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("farmer.phone_no"), primary_key=True, index=True), ge=1000000000, le=9999999999)
+    farmer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("farmer.phone_no"), index=True), ge=1000000000, le=9999999999)
 
     farmer: Farmer = Relationship(back_populates="inventory")
     harvests: list["Harvest"] = Relationship(back_populates="produce")
@@ -67,7 +67,7 @@ class CartItem(SQLModel, table=True):
 
 class Cart(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
-    consumer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("user.phone_no"), primary_key=True, index=True), ge=1000000000, le=9999999999)
+    consumer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("user.phone_no"), index=True), ge=1000000000, le=9999999999)
     total_amount: float = Field(default=0.0, ge=0.0)
 
     consumer: User = Relationship(back_populates="cart")
