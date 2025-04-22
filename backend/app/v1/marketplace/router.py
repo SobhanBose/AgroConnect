@@ -6,6 +6,7 @@ from typing import Literal
 from app.v1.utils.database import SessionDep
 from app.v1 import models
 from app.v1.marketplace import schemas, responseModels
+from app.v1.utils.enumerations import produceTag
 
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
@@ -38,7 +39,7 @@ def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate",
 
 
 @router.get("/filter-tag", status_code=status.HTTP_200_OK, response_model=list[responseModels.ShowProduceMinimal])
-def get_produce_by_tag(tag: str, db: SessionDep, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
+def get_produce_by_tag(tag: produceTag, db: SessionDep, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
     produces = db.exec(select(models.Produce).where(models.Produce.tag == tag)).all()
     if not produces:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="No produce found with this tag")

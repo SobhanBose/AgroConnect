@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger, ForeignKey
 from uuid import uuid4, UUID
 from datetime import date
 
-from app.v1.utils.produce_tag import produceTag
+from app.v1.utils import enumerations as enums
 
 
 class User(SQLModel, table=True):
@@ -15,6 +15,7 @@ class User(SQLModel, table=True):
 
     farmer: Optional["Farmer"] = Relationship(back_populates="user")
     cart: Optional["Cart"] = Relationship(back_populates="consumer")
+    orders: Optional[list["Order"]] = Relationship(back_populates="consumer")
 
 
 class Farmer(SQLModel, table=True):
@@ -36,7 +37,7 @@ class Produce(SQLModel, table=True):
     name: str = Field(nullable=False, max_length=255, index=True)
     description: str | None = Field(max_length=255)
     image_path: str = Field(default="https://placehold.co/200", max_length=255)
-    tag: str = Column(SQLEnum(produceTag, native_enum=False), nullable=False)
+    tag: str = Column(SQLEnum(enums.produceTag, native_enum=False), nullable=False)
     farmer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("farmer.phone_no"), index=True), ge=1000000000, le=9999999999)
 
     farmer: Farmer = Relationship(back_populates="inventory")
@@ -72,3 +73,41 @@ class Cart(SQLModel, table=True):
 
     consumer: User = Relationship(back_populates="cart")
     cart_items: list[CartItem] = Relationship(back_populates="cart")
+
+
+class OrderItems(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
+    order_id: UUID = Field(default_factory=uuid4, foreign_key="order.id", index=True)
+    harvest_id: UUID = Field(default_factory=uuid4, foreign_key="harvest.id")
+    qty: int = Field(nullable=False, gt=0)  # Quantity in kg or liters
+    rate: float = Field(nullable=False, gt=0)  # Price in currency per kg or liter
+
+    harvest: Harvest = Relationship()
+    order: "Order" = Relationship(back_populates="order_items")
+
+
+class Order(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
+    consumer_phone_no: int = Field(sa_column=Column(BigInteger(), ForeignKey("user.phone_no"), index=True), ge=1000000000, le=9999999999)
+    total_amount: float = Field(default=0.0, ge=0.0)
+    delivery_mode: enums.orderType = Field(default=enums.orderType.delivery)
+    order_status: enums.orderStatus = Field(default=enums.orderStatus.pending)
+    delivery_charges: float = Field(default=30.0, ge=0.0)
+    payment_mode: enums.paymentMode = Field(default=enums.paymentMode.pod)
+    order_date: date = Field(default=date.today())
+
+    consumer: User = Relationship(back_populates="orders")
+    order_items: list[OrderItems] = Relationship(back_populates="order")
+    transaction: Optional["Transaction"] = Relationship(back_populates="order")
+
+
+class Transaction(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
+    mode: enums.transactionMode = Field(nullable=False)
+    utr: str = Field(nullable=False, max_length=255)  # Unique Transaction Reference
+    order_id: UUID = Field(default_factory=uuid4, foreign_key="order.id", index=True)
+    amount: float = Field(nullable=False, gt=0)  # Amount in currency
+    transaction_date: date = Field(default=date.today())  # YYYY-MM-DD format
+    transaction_status: enums.transactionStatus = Field(default=enums.transactionStatus.success)
+
+    order: Order = Relationship(back_populates="transaction")

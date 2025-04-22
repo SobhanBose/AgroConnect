@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
+from typing import Literal
+
 from app.v1.auth import schemas, responseModels
 from app.v1.utils import database
 from app.v1.auth.managers import OTPManager
@@ -9,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register/{user_type}/request-otp", status_code=status.HTTP_201_CREATED, response_model=responseModels.HTTPExceptionResponse)
-def register(request: schemas.OTPRequest, user_type: str, db: database.SessionDep) -> HTTPException:
+def register(request: schemas.OTPRequest, user_type: Literal["consumer", "farmer"], db: database.SessionDep) -> HTTPException:
     try:
         user = db.get(models.User, request.phone_no)
     except Exception as e:

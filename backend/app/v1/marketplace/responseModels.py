@@ -65,6 +65,8 @@ class HarvestGrouped(SQLModel):
     produce: ShowProduce
     harvests: list[ShowHarvest]
 
+    model_config = {"from_attributes": True}
+
 
 class HTTPExceptionResponse(SQLModel):
     status_code: int
