@@ -1,7 +1,7 @@
 from sqlmodel import Field, SQLModel, Enum as SQLEnum, Column
 from uuid import UUID
 
-from app.v1.utils.produce_tag import produceTag
+from app.v1.utils.enumerations import produceTag
 
 
 class ProduceCreate(SQLModel):
