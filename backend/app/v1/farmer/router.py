@@ -286,6 +286,7 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
     existing_harvest = db.exec(select(models.Harvest).where(models.Harvest.produce_id == harvest.produce_id, models.Harvest.harvest_date == harvest.harvest_date)).first()
     if existing_harvest:
         existing_harvest.qty_harvested += harvest.qty_harvested
+        existing_harvest.qty_available += harvest.qty_harvested
         try:
             db.add(existing_harvest)
             db.commit()
@@ -308,7 +309,7 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
             db.add(h)
 
     try:
-        harvest = models.Harvest(**harvest.model_dump())
+        harvest = models.Harvest(**harvest.model_dump(), qty_available=harvest.qty_harvested)
         db.add(harvest)
         db.commit()
         db.refresh(harvest)

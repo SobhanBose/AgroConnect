@@ -78,11 +78,14 @@ def activate(request: schemas.OTPVerificationRequest, db: database.SessionDep) -
             return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already active.")
 
         user.is_active = True
+        cart = models.Cart(consumer_phone_no=request.phone_no, total_amount=0)
 
         try:
             db.add(user)
+            db.add(cart)
             db.commit()
             db.refresh(user)
+            db.refresh(cart)
         except Exception as e:
             return HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
