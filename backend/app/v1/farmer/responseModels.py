@@ -45,6 +45,7 @@ class ShowHarvest(SQLModel):
     qty_harvested: int  # Quantity in kg or liters
     harvest_date: date  # YYYY-MM-DD format
     rate: float  # Price in currency per kg or liter
+    qty_available: int  # Quantity available for sale
     produce: ShowProduce
 
     model_config = {"from_attributes": True}
