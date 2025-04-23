@@ -1,6 +1,8 @@
 from sqlmodel import SQLModel
 from uuid import UUID
 
+from app.v1.farmer.responseModels import ShowHarvest
+
 
 class HTTPExceptionResponse(SQLModel):
     status_code: int
@@ -12,9 +14,9 @@ class HTTPExceptionResponse(SQLModel):
 class ShowCartItem(SQLModel):
     id: UUID
     cart_id: UUID
-    harvest_id: UUID
     qty: int
     rate: float
+    harvest: ShowHarvest
 
     model_config = {"from_attributes": True}
 
