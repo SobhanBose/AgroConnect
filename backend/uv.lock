@@ -29,6 +29,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
+    { name = "geoalchemy2" },
     { name = "passlib" },
     { name = "pathlib" },
     { name = "psycopg2-binary" },
@@ -47,6 +48,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.12" },
+    { name = "geoalchemy2", specifier = ">=0.17.1" },
     { name = "passlib", specifier = ">=1.7.4" },
     { name = "pathlib", specifier = ">=1.0.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
@@ -153,6 +155,19 @@ wheels = [
 [package.optional-dependencies]
 standard = [
     { name = "uvicorn", extra = ["standard"] },
+]
+
+[[package]]
+name = "geoalchemy2"
+version = "0.17.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/52/60214c086a57a7e3ea82241bab94e09827f2b7f7c2084fe6fc280c099b23/geoalchemy2-0.17.1.tar.gz", hash = "sha256:ff5bbe0db5a4ff979f321c8aa1a7556f444ea30cda5146189b1a177ae5bec69d", size = 231566 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/82/e83e0f74cba8bbff9c12b2dea4693adb0cf89204012da48433ebd8e8c4d8/GeoAlchemy2-0.17.1-py3-none-any.whl", hash = "sha256:29f41b67d3a52df47821b695d31dec8600747c6ef4de62ee69811bde481dd2ae", size = 77791 },
 ]
 
 [[package]]
@@ -299,6 +314,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979 },
+]
+
+[[package]]
+name = "packaging"
+version = "25.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/d4/1fc4078c65507b51b96ca8f8c3ba19e6a61c8253c72794544580a7b6c24d/packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f", size = 165727 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484", size = 66469 },
 ]
 
 [[package]]

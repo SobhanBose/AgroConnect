@@ -68,6 +68,12 @@ class HarvestGrouped(SQLModel):
     model_config = {"from_attributes": True}
 
 
+class FarmerNearbyResponse(SQLModel):
+    description: str | None = None
+    distance_km: float
+    user: ShowUser
+
+
 class HTTPExceptionResponse(SQLModel):
     status_code: int
     detail: str
