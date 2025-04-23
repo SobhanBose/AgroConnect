@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/context';
 import FullScreenLoader from "../components/fullScreenLoader";
 import Loader from "react-js-loader";
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 const ProductPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
   const { id } = useParams();
@@ -54,6 +55,13 @@ const ProductPage = () => {
   ];
 
   const handleAddToCart = async () => {
+    
+    if (!user.phone || user.role !== "consumer") {
+      toast.error("Please login as a consumer to add items to cart.");
+      navigate("/login");
+      return; 
+    }
+
     setShow(true);
     try {
       const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/cart/${user.phone}/add`, {

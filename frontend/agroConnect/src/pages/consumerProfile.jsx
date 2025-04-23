@@ -1,10 +1,14 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { useUser } from "../context/context";
 
 import SideNavbarConsumer from "../components/sideNavbarConsumer";
 
-
 export default function ConsumerProfile(){
+    const {user} = useUser();
 
+    if (!user.phone || user.role !== "consumer") {
+        return <Navigate to="/login" replace />;
+    }
 
     return (
         <>

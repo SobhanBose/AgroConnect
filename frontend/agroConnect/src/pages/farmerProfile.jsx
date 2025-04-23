@@ -1,10 +1,15 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { useUser } from "../context/context";
 
 import SideNavbarFarmer from "../components/sideNavbarFarmer";
 
 
 export default function FarmerProfile(){
+    const {user} = useUser();
 
+    if (!user.phone || user.role !== "farmer") {
+        return <Navigate to="/login" replace />;
+    }
 
     return (
         <>
