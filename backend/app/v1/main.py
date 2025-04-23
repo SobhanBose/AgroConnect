@@ -14,7 +14,7 @@ from app.v1.orders.router import router as orders_router
 
 
 cors_origins = ["*"]
-cors_methods = ["GET", "POST"]
+cors_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
 
 
 app = FastAPI()
