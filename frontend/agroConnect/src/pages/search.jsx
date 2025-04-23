@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaFilter, FaSort, FaMapMarkerAlt } from "react-icons/fa";
 import SearchProduct from "../components/searchProduct";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 const API_URL = "https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/marketplace/";
 
@@ -18,17 +20,17 @@ function useQuery() {
 }
 
 export default function Search() {
+  const [loading, setLoading] = useState(false);
   const queryParam = useQuery().get("q") || "";
   const [products, setProducts] = useState([]);
   const [filteredCategory, setFilteredCategory] = useState("All");
   const [sortBy, setSortBy] = useState("harvest_date");
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const params = new URLSearchParams();
         if (queryParam) params.append("name", queryParam);
@@ -47,10 +49,11 @@ export default function Search() {
 
         setProducts(productList);
       } catch (err) {
+        toast.error('Something went wrong!');
         console.error("Failed to fetch products", err);
         setProducts([]);
       }
-      setIsLoading(false);
+      setLoading(false);
     };
 
     fetchProducts();
@@ -80,13 +83,8 @@ export default function Search() {
       </div>
 
       {/* Filters */}
-      <div className="flex justify-between items-center mb-6 px-4">
-        <div className="flex items-center gap-2 text-sm text-gray-700">
-          <FaMapMarkerAlt className="text-green-600 text-base" />
-          <span>
-            Delivering to <span className="font-medium">Kolkata, West Bengal</span>
-          </span>
-        </div>
+      <div className="flex flex-row-reverse justify-between items-center mb-6 px-4">
+        
 
         <div className="flex gap-3">
           {/* Sort */}
@@ -142,13 +140,15 @@ export default function Search() {
           </div>
         </div>
       </div>
-
+      
       {/* Product List */}
       <div className="max-w-7xl mx-auto px-4">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Products</h2>
-        {isLoading ? (
-          <p className="text-center text-gray-500 mt-10 text-sm">Loading products...</p>
-        ) : products.length === 0 ? (
+        {loading ?
+                    <div className="flex justify-center items-center h-40">
+                        <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+                    </div>:
+        products.length === 0 ? (
           <p className="text-center text-gray-500 mt-10 text-sm">No products matched.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">

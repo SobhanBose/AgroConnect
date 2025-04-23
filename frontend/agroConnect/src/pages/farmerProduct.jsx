@@ -2,14 +2,18 @@ import { useState, useEffect } from "react";
 import { useUser } from "../context/context";
 
 import ProductCard from "../components/productCard";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 export default function FarmerProduct() {
+  const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const { user } = useUser();
     const [products, setProducts] = useState([]);
 
     useEffect(() => {
         const fetchFarmerProduce = async () => {
+          setLoading(true);
           try {
             const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/produce`, {
               method: 'GET',
@@ -23,11 +27,14 @@ export default function FarmerProduct() {
             if (res.ok) {
               setProducts(data);
             } else {
+              toast.error('Something went wrong!');
               console.error('Failed to fetch profile:', data);
             }
           } catch (error) {
+            toast.error('Something went wrong!');
             console.error('Error:', error);
           }
+          setLoading(false);
         };
       
         fetchFarmerProduce();
@@ -48,6 +55,11 @@ export default function FarmerProduct() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
+
+            {loading && 
+            <div className="flex justify-center items-center h-40">
+            <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+          </div>}
 
             <div className="flex flex-row flex-wrap justify-between w-full grow overflow-scroll gap-2">
                 {filteredProducts.map(product => (

@@ -1,73 +1,56 @@
-import { useState } from "react";
-import ProductCard from "../components/productCard";
-import OrderCard from "../components/ConsumerOrderCard";
+import { useState, useEffect } from "react";
+import { useUser } from "../context/context";
+import ConsumerOrderCard from "../components/ConsumerOrderCard";
+import FullScreenLoader from "../components/fullScreenLoader";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 
-export default function ConsumerOrder(){
-    const [searchTerm, setSearchTerm] = useState("");
+export default function ConsumerOrder() {
+    const [loading, setLoading] = useState(false);
+    const [show, setShow] = useState(false);
+    const { user } = useUser();
+    const [orders, setOrders] = useState([]);
+    const [refresh, setRefresh] = useState(false);
 
-const order =    {
-        orderId: "ORD123",
-        orderDate: "2025-04-18T10:20:00Z",
-        status: "Delivered",
-        totalPrice: 89.75,
-        products: [
-            { name: "Tomato", quantity: 2 },
-            { name: "Potato", quantity: 1 },
-            { name: "Onion", quantity: 3 },
-            { name: "Carrot", quantity: 1 },
-        ]
-    }
-    
-    
-        const products = [
-            {
-                _id: '1',
-                name: 'Fresh Tomatoes',
-                price: 40,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg',
-            },
-            {
-                _id: '2',
-                name: 'Long Brinjals',
-                price: 30,
-                imageUrl: 'https://fpsstore.in/cdn/shop/products/BrinjalLong.jpg?v=1641627205',
-            },
-            {
-                _id: '3',
-                name: 'Green Chilies',
-                price: 20,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Green_Chillies.jpg',
-            },
-            {
-                _id: '4',
-                name: 'Red Onions',
-                price: 35,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Red_Onions.jpg',
-            },
-        ];
-    
-        const filteredProducts = products.filter(product =>
-            product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    
-        return (
-            <div className="p-6 flex flex-col items-center">
-                <h2 className="text-3xl font-bold mb-4 text-left w-full">My Orders</h2>
-    
-                <input
-                    type="text"
-                    placeholder="Search product by name..."
-                    className="mb-6 px-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-    
-                <div className="flex flex-wrap justify-center gap-5 w-full overflow-scroll">
-                    {filteredProducts.map(product => (
-                        <OrderCard order={order} />
-                    ))}
-                </div>
+    useEffect(() => {
+        async function fetchOrders() {
+            setLoading(true);
+            try {
+                const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/orders/consumer/${user.phone}`);
+                const data = await res.json();
+                if(res.ok){
+                    setOrders(data);
+                }else {
+                    toast.error('Something went wrong!');
+                    console.error('Failed to fetch profile:', data);
+                }
+                
+
+            } catch (error) {
+                toast.error('Something went wrong!');
+                console.error("Failed to fetch orders:", error);
+            }
+            setLoading(false);
+        }
+
+        fetchOrders();
+    }, [refresh]);
+
+    return (
+        <div className="p-2 w-full flex flex-col items-center">
+            <FullScreenLoader show={show} />
+            <h2 className="text-3xl font-bold mb-4 text-left w-full">My Orders</h2>
+            {loading && 
+            <div className="flex justify-center items-center h-40">
+            <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+          </div>}
+
+            <div className="flex flex-wrap justify-center gap-5 w-full overflow-scroll">
+                {orders.map((order, key) => (
+                    <ConsumerOrderCard key={key} order={order} refresh={refresh} setRefresh={setRefresh} setShow={setShow} />
+                ))}
             </div>
-        );
+        </div>
+    );
 }

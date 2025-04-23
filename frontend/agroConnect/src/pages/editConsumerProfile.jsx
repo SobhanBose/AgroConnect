@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../context/context";
+import FullScreenLoader from "../components/fullScreenLoader";
+import { toast } from "react-toastify";
+
 
 export default function EditConsumerProfile() {
+  const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState({ lat: null, long: null });
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -19,6 +23,7 @@ export default function EditConsumerProfile() {
 
   useEffect(() => {
     const fetchConsumerData = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/consumer/${user.phone}`, {
           method: 'GET',
@@ -26,9 +31,9 @@ export default function EditConsumerProfile() {
             'Content-Type': 'application/json',
           }
         });
-  
+
         const data = await res.json();
-  
+
         if (res.ok) {
           setData(data);
 
@@ -39,12 +44,15 @@ export default function EditConsumerProfile() {
           }));
         } else {
           console.error('Failed to fetch profile:', data);
+          toast.error('Something went wrong!');
         }
       } catch (error) {
         console.error('Error:', error);
+        toast.error('Something went wrong!');
       }
+      setLoading(false);
     };
-  
+
     fetchConsumerData();
   }, []);
 
@@ -58,31 +66,36 @@ export default function EditConsumerProfile() {
   };
 
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
-      try {
-        const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/update-consumer`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            'phone_no': user.phone,
-            'first_name': form.firstname,
-            'last_name': form.lastname
-          })
-        });
-  
-        const data = await res.json();
-  
-        if (res.ok) {
-          console.log('ok');
-        } else {
-          console.error('Failed to fetch profile:', data);
-        }
-      } catch (error) {
-        console.error('Error:', error);
+    try {
+      const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/update-consumer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          'phone_no': user.phone,
+          'first_name': form.firstname,
+          'last_name': form.lastname
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log('ok');
+        toast.success('Profile Added successfully!');
+      } else {
+        console.error('Failed to fetch profile:', data);
+        toast.error('Something went wrong!');
       }
-    };
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Something went wrong!');
+    }
+    setLoading(false);
+  };
 
 
   useEffect(() => {
@@ -117,7 +130,7 @@ export default function EditConsumerProfile() {
         className="bg-white p-6 rounded-2xl shadow-md w-full max-w-2xl space-y-5"
       >
         <h2 className="text-3xl font-bold mb-4 text-left w-full">Edit Profile</h2>
-
+        <FullScreenLoader show={loading} />
         <div>
           <label className="block text-sm font-medium">First Name</label>
           <input

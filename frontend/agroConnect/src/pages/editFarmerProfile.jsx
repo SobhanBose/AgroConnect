@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { useUser } from "../context/context";
+import FullScreenLoader from "../components/fullScreenLoader";
+import { toast } from 'react-toastify';
 
 export default function EditFarmerProfile() {
+  const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState({ lat: null, long: null });
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
   const { user } = useUser();
+  
 
   const [form, setForm] = useState({
     firstname: '',
@@ -17,6 +21,7 @@ export default function EditFarmerProfile() {
 
   useEffect(() => {
     const fetchFarmerData = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}`, {
           method: 'GET',
@@ -37,11 +42,14 @@ export default function EditFarmerProfile() {
             description: data.description || '',
           }));
         } else {
+          toast.error('Something went wrong!');
           console.error('Failed to fetch profile:', data);
         }
       } catch (error) {
+        toast.error('Something went wrong!');
         console.error('Error:', error);
       }
+      setLoading(false);
     };
   
     fetchFarmerData()
@@ -59,6 +67,7 @@ export default function EditFarmerProfile() {
   };
 
 const handleSubmit = async (e) => {
+  setLoading(true);
     e.preventDefault();
       try {
         const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/auth/register/update-farmer`, {
@@ -77,13 +86,17 @@ const handleSubmit = async (e) => {
         const data = await res.json();
   
         if (res.ok) {
+          toast.success("Profile Updated Successfully !!!");
           console.log('ok');
         } else {
+          toast.error('Something went wrong!');
           console.error('Failed to fetch profile:', data);
         }
       } catch (error) {
+        toast.error('Something went wrong!');
         console.error('Error:', error);
       }
+      setLoading(false);
     };
 
   useEffect(() => {
@@ -113,6 +126,7 @@ const handleSubmit = async (e) => {
 
   return (
     <>
+    <FullScreenLoader show={loading} />
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-2xl shadow-md w-full max-w-2xl space-y-5"

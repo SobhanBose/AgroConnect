@@ -4,13 +4,17 @@ import { motion } from "framer-motion";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import SearchProduct from "../components/searchProduct";
 import FarmerSearchProduct from "../components/farmerSearchProduct";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 export default function FarmerProducts() {
+  const [loading, setLoading] = useState(false);
   const { id } = useParams();
   const [products, setProducts] = useState([]);
 
    useEffect(() => {
       const fetchProduce = async () => {
+        setLoading(true);
         try {
           const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${id}/produce`);
           const data = await res.json();
@@ -18,11 +22,14 @@ export default function FarmerProducts() {
           if (res.ok) {
             setProducts(data);
           } else {
+            toast.error('Something went wrong!');
             console.error('Failed to fetch profile:', data);
           }
         } catch (error) {
+          toast.error('Something went wrong!');
           console.error('Error:', error);
         }
+        setLoading(false);
       };
   
       fetchProduce();
@@ -48,21 +55,15 @@ export default function FarmerProducts() {
         </motion.div>
       </div>
 
-      <div className="flex justify-between items-center mb-6 px-4">
-        <div className="flex items-center gap-2 text-sm text-gray-700">
-          <FaMapMarkerAlt className="text-green-600 text-base" />
-          <span>
-            Delivering to <span className="font-medium">Kolkata, West Bengal</span>
-          </span>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">
           Products by Farmer: <span className="text-green-700">{id}</span>
         </h2>
 
-        {products.length === 0 ? (
+        {loading ?
+                    <div className="flex justify-center items-center h-40">
+                        <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+                    </div>: products.length === 0 ? (
           <p className="text-center text-gray-500 mt-10 text-sm">No products found for this farmer.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">

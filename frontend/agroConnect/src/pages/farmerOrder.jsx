@@ -1,59 +1,81 @@
-import { useState } from "react";
-import ProductCard from "../components/productCard";
-import OrderCard from "../components/FarmerOrderCard";
+import { useEffect, useState } from "react";
+import { useUser } from "../context/context";
+import FarmerOrderCard from "../components/FarmerOrderCard";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
+export default function FarmerOrder() {
+    const [orders, setOrders] = useState([]);
+    const [statusFilter, setStatusFilter] = useState("All");
+    const { user } = useUser();
+    const [loading, setLoading] = useState(false);
+    // const [refresh, setRefresh] = useState(false);
 
-export default function FarmerOrder(){
-    const [searchTerm, setSearchTerm] = useState("");
-    
-        const products = [
-            {
-                _id: '1',
-                name: 'Fresh Tomatoes',
-                price: 40,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/89/Tomato_je.jpg',
-            },
-            {
-                _id: '2',
-                name: 'Long Brinjals',
-                price: 30,
-                imageUrl: 'https://fpsstore.in/cdn/shop/products/BrinjalLong.jpg?v=1641627205',
-            },
-            {
-                _id: '3',
-                name: 'Green Chilies',
-                price: 20,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/45/Green_Chillies.jpg',
-            },
-            {
-                _id: '4',
-                name: 'Red Onions',
-                price: 35,
-                imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/25/Red_Onions.jpg',
-            },
-        ];
-    
-        const filteredProducts = products.filter(product =>
-            product.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    
-        return (
-            <div className="p-6 flex flex-col items-center">
-                <h2 className="text-3xl font-bold mb-4 text-left w-full">My Orders</h2>
-    
-                <input
-                    type="text"
-                    placeholder="Search product by name..."
-                    className="mb-6 px-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-    
-                <div className="flex flex-wrap justify-center gap-5 w-full overflow-scroll">
-                    {filteredProducts.map(product => (
-                        <OrderCard productName={product.name} quantity={2} price={59.99} />
-                    ))}
-                </div>
+    useEffect(() => {
+        async function fetchOrders() {
+            setLoading(true);
+            try {
+                const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/orders/farmer/${user.phone}`);
+                const data = await res.json();
+                if (res.ok) {
+                    setOrders(data);
+                } else {
+                    toast.error('Something went wrong!');
+                    console.error('Failed to fetch orders:', data);
+                }
+            } catch (error) {
+                toast.error('Something went wrong!');
+                console.error("Failed to fetch orders:", error);
+            }
+            setLoading(false);
+        }
+
+        fetchOrders();
+    }, [user.phone]);
+
+    const filteredOrders = orders.filter(orderObj =>
+        statusFilter === "All" || orderObj.order.order_status === statusFilter
+    );
+
+    return (
+        <>
+        
+        <div className="p-6 flex flex-col items-center w-full">
+            <h2 className="text-3xl font-bold mb-4 text-left w-full">My Orders</h2>
+
+            <div className="flex flex-col items-start w-full gap-2 mb-6">
+                <label className="text-sm font-medium text-gray-700">Filter by Order Status</label>
+                <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 w-60"
+                >
+                    <option value="All">All</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
             </div>
-        );
+
+            {loading && 
+                    <div className="flex justify-center items-center h-40">
+                    <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+                  </div>}
+            <div className="flex flex-wrap justify-center gap-5 w-full overflow-scroll">
+                {filteredOrders.map(orderObj =>
+                    orderObj.order_items.map((item, idx) => (
+                        <FarmerOrderCard
+                            key={`${orderObj.order.id}-${idx}`}
+                            productName={item.harvest.produce.name}
+                            quantity={item.qty}
+                            price={item.rate}
+                            status={orderObj.order.order_status}
+                            orderId={orderObj.order.id}
+                        />
+                    ))
+                )}
+            </div>
+        </div>
+        </>
+    );
 }

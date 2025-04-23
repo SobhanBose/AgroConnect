@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/context';
+import FullScreenLoader from "../components/fullScreenLoader";
+import { toast } from 'react-toastify'
 
 export default function Login(){
+    const [show, setShow] = useState(false);
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
     const [otpSent, setOtpSent] = useState(false);
@@ -13,6 +16,7 @@ export default function Login(){
     const { setUser } = useUser();
 
     const  handleSendOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
         console.log('Phone:', phone, 'Role:', role);
 
@@ -28,19 +32,24 @@ export default function Login(){
             const data = await res.json();
     
             if (res.ok) {
+                toast.success("OTP Sent Successfully!!!")
                 setOtpSent(true);
                 console.log('OTP Sent:', data);
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
     const  handleVerifyOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
         console.log('otp', otp);
 
@@ -56,6 +65,7 @@ export default function Login(){
             const data = await res.json();
     
             if (res.ok) {
+                toast.success("Logged In Successfully!!!");
                 setUser({ phone, role });
                 if(role === 'farmer'){
                     navigate('../farmer/editFarmerProfile')
@@ -67,16 +77,20 @@ export default function Login(){
 
 
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
     const  handleResendOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
 
         try {
@@ -92,26 +106,24 @@ export default function Login(){
     
             if (res.ok) {
                 
-                // if(role === 'farmer'){
-                //     navigate('../farmer/editFarmerProfile')
-                // }
-                // else{
-                //     navigate('../consumer/editConsumerProfile')
-                // }
-                // setVerified(true);
+                toast.success("OTP Resent Successfully!!!");
 
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
     return (
         <div className="w-screen h-screen flex items-center justify-center px-4 bg-green-50">
+            <FullScreenLoader show={show} />
             <div className="w-full sm:w-3/6 bg-cyan-50 p-6 rounded-2xl shadow-2xl">
                 <h2 className="text-4xl font-bold text-center text-green-700 mb-6">Login</h2>
 
@@ -144,7 +156,7 @@ export default function Login(){
                                     >
                                         <option value="">-- Choose Role --</option>
                                         <option value="farmer">Farmer</option>
-                                        <option value="consumer">Consumer/Retailer</option>
+                                        <option value="consumer">Consumer</option>
                                     </select>
                                 </div>
 
@@ -187,9 +199,6 @@ export default function Login(){
                                 </button>
                                 </form>
 
-                            {
-                                wrong && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
-                            }
                             </>
 
                         )

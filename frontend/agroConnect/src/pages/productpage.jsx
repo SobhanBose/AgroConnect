@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useUser } from '../context/context';
+import FullScreenLoader from "../components/fullScreenLoader";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
+
 import {
   MapPin,
   Leaf,
@@ -11,6 +15,8 @@ import {
 } from 'lucide-react';
 
 const ProductPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
   const { id } = useParams();
   const [prod_id, phone] = id.split('&&');
   const [product, setProduct] = useState(null);
@@ -47,7 +53,8 @@ const ProductPage = () => {
     },
   ];
 
-  const handleAddToCart = async() =>{
+  const handleAddToCart = async () => {
+    setShow(true);
     try {
       const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/cart/${user.phone}/add`, {
         method: 'POST',
@@ -63,18 +70,23 @@ const ProductPage = () => {
       const data = await res.json();
 
       if (res.ok) {
+        toast.success("Items Successfully Added to Cart !!!")
         console.log('ok');
       } else {
+        toast.error('Something went wrong!');
         console.error('Failed to fetch profile:', data);
       }
     } catch (error) {
+      toast.error('Something went wrong!');
       console.error('Error:', error);
     }
+    setShow(false);
   };
-  
+
 
   useEffect(() => {
     const fetchProduce = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${phone}/harvest/${prod_id}`);
         const data = await res.json();
@@ -83,11 +95,14 @@ const ProductPage = () => {
           setProduct(data);
           setSelectedHarvest(data.harvests?.[0] || null);
         } else {
+          toast.error('Something went wrong!');
           console.error('Failed to fetch profile:', data);
         }
       } catch (error) {
+        toast.error('Something went wrong!');
         console.error('Error:', error);
       }
+      setLoading(false);
     };
 
     fetchProduce();
@@ -113,14 +128,19 @@ const ProductPage = () => {
     setShowQuantitySelector(true);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+      </div>
+    )
+  }
+
   if (!product || !selectedHarvest) return <div className="text-center mt-20">Loading...</div>;
 
   return (
     <div className="mt-20 max-w-6xl mx-auto px-4 space-y-10 pb-40 relative">
-      <div className="flex items-center gap-2 text-sm text-gray-700 bg-green-50 p-3 rounded-md">
-        <MapPin className="w-4 h-4 text-green-600" />
-        Delivering to <span className="font-medium ml-1">Soumik Bag, Kolkata - 700001</span>
-      </div>
+      <FullScreenLoader show={show} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         <div className="w-full">
@@ -164,12 +184,6 @@ const ProductPage = () => {
             <div className="flex gap-4">
               <button
                 className="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-md"
-                onClick={handleActionClick}
-              >
-                Buy Now
-              </button>
-              <button
-                className="border border-green-700 text-green-700 hover:bg-green-100 px-5 py-2 rounded-md"
                 onClick={handleActionClick}
               >
                 Add to Cart
@@ -238,9 +252,6 @@ const ProductPage = () => {
           </div>
 
           <div className="flex gap-4">
-            <button className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800">
-              Buy Now
-            </button>
             <button onClick={handleAddToCart} className="border border-green-700 text-green-700 px-6 py-2 rounded-lg hover:bg-green-100">
               Add to Cart
             </button>

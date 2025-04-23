@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/context';
+import FullScreenLoader from "../components/fullScreenLoader";
+import { toast } from 'react-toastify'
+
 
 export default function Register() {
+    const [show, setShow] = useState(false);
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState('');
     const [otpSent, setOtpSent] = useState(false);
@@ -12,6 +16,7 @@ export default function Register() {
     const { setUser } = useUser();
 
     const  handleSendOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
         console.log('Phone:', phone, 'Role:', role);
 
@@ -27,19 +32,24 @@ export default function Register() {
             const data = await res.json();
     
             if (res.ok) {
+                toast.success("OTP Sent Successfully!!!")
                 setOtpSent(true);
                 console.log('OTP Sent:', data);
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
     const  handleVerifyOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
         console.log('otp', otp);
 
@@ -55,6 +65,7 @@ export default function Register() {
             const data = await res.json();
     
             if (res.ok) {
+                toast.success("Registered Successfully!!!");
                 setUser({ phone, role });
                 if(role === 'farmer'){
                     navigate('../farmer/editFarmerProfile')
@@ -66,16 +77,20 @@ export default function Register() {
 
 
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false)
     };
 
     const  handleResendOtp = async (e) => {
+        setShow(true);
         e.preventDefault();
 
         try {
@@ -90,27 +105,24 @@ export default function Register() {
             const data = await res.json();
     
             if (res.ok) {
-                
-                // if(role === 'farmer'){
-                //     navigate('../farmer/editFarmerProfile')
-                // }
-                // else{
-                //     navigate('../consumer/editConsumerProfile')
-                // }
-                // setVerified(true);
+                toast.success("OTP Resent Successfully!!!");
 
             } else {
+                toast.error('Something went wrong!');
                 setWrong(true);
                 console.error('Failed to send OTP:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             setWrong(true);
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
     return (
         <div className="w-screen h-screen flex items-center justify-center px-4 bg-green-50">
+            <FullScreenLoader show={show} />
             <div className="w-full sm:w-3/6 bg-cyan-50 p-6 rounded-2xl shadow-2xl">
                 <h2 className="text-4xl font-bold text-center text-green-700 mb-6">Register</h2>
 
@@ -188,9 +200,7 @@ export default function Register() {
                                 </button>
                             </form>
 
-                            {
-                                wrong && <p className='text-red-600 text-center my-3'>Something Went Wrong !!! Try Again</p>
-                            }
+                            
                         </>
 
                     )

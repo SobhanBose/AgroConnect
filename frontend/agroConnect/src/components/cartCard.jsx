@@ -2,7 +2,7 @@ import { MdDelete } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useUser } from "../context/context";
 
-export default function CartCard({cart}) {
+export default function CartCard({cart, setRefresh, refresh}) {
 
     const {user} = useUser();
 
@@ -19,6 +19,7 @@ export default function CartCard({cart}) {
       
             if (res.ok) {
               console.log('ok');
+              setRefresh(!refresh)
             } else {
               console.error('Failed to fetch profile:', data);
             }

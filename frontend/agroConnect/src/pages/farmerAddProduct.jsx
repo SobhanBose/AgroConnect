@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react"
 import { useUser } from "../context/context";
+import FullScreenLoader from "../components/fullScreenLoader";
+import { toast } from 'react-toastify';
 
 
 export default function AddProduct() {
+    const [loading, setLoading] = useState(false);
     const { user } = useUser();
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
@@ -18,6 +21,7 @@ export default function AddProduct() {
     }
 
     const handleSubmit = async (e) => {
+        setLoading(true);
         
         e.preventDefault();
         try {
@@ -37,18 +41,24 @@ export default function AddProduct() {
             const data = await res.json();
 
             if (res.ok) {
+                toast.success("Product Added Successfully !!!");
                 console.log('ok');
             } else {
+                toast.error('Something went wrong!');
                 console.error('Failed to fetch profile:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             console.error('Error:', error);
         }
+        setLoading(false);
+        e.reset();
     };
 
 
     return (
         <>
+        <FullScreenLoader show={loading} />
             <form
                 onSubmit={handleSubmit}
                 className="bg-white p-6 rounded-2xl shadow-md w-full max-w-2xl space-y-5"

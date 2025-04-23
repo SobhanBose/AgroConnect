@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react"
 import { useUser } from "../context/context";
 import { useParams } from "react-router-dom";
+import FullScreenLoader from "../components/fullScreenLoader";
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 export default function EditProduct() {
+    const [loading, setLoading] = useState(false);
+    const [show, setShow] = useState(false);
     const { user } = useUser();
     const [product, setProduct] = useState(null);
     const [form, setForm] = useState({
@@ -14,6 +19,7 @@ export default function EditProduct() {
 
     useEffect(() => {
         const fetchProduce = async () => {
+            setLoading(true);
             try {
                 const res = await fetch(`https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/produce/${id}`, {
                     method: 'GET',
@@ -27,11 +33,14 @@ export default function EditProduct() {
                 if (res.ok) {
                     setProduct(data);
                 } else {
+                    toast.error('Something went wrong!');
                     console.error('Failed to fetch profile:', data);
                 }
             } catch (error) {
+                toast.error('Something went wrong!');
                 console.error('Error:', error);
             }
+            setLoading(false);
         };
 
         fetchProduce();
@@ -47,6 +56,8 @@ export default function EditProduct() {
     }
 
     const handleSubmit = async (e) => {
+
+        setShow(true);
 
         e.preventDefault();
         try {
@@ -66,19 +77,28 @@ export default function EditProduct() {
             const data = await res.json();
 
             if (res.ok) {
+                toast.success("Harvest Added Successfully !!!");
                 console.log('ok');
             } else {
+                toast.error('Something went wrong!');
                 console.error('Failed to fetch profile:', data);
             }
         } catch (error) {
+            toast.error('Something went wrong!');
             console.error('Error:', error);
         }
+        setShow(false);
     };
 
 
     return (
         <>
+            <FullScreenLoader show={show} />
             <div>
+            {loading && 
+            <div className="flex justify-center items-center h-40">
+            <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+          </div>}
                 {product && <div className="p-6">
                     <h2 className="text-2xl font-bold mb-4">{product.name}</h2>
                     <img

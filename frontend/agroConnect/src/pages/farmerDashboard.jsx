@@ -26,7 +26,7 @@ export default function FarmerDashboard() {
 
                 <h2 className="text-2xl font-semibold mb-2">Welcome, John Doe 👋</h2>
 
-                    <Link to={`../editFarmerProfile/${123}`} className="bg-green-500 p-2 rounded-2xl text-white cursor-pointer mb-2">Edit Profile</Link>
+                    <Link to={`../editFarmerProfile`} className="bg-green-500 p-2 rounded-2xl text-white cursor-pointer mb-2">Edit Profile</Link>
                 
                     
 

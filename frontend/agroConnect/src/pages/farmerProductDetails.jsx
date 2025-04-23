@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUser } from '../context/context';
+import Loader from "react-js-loader";
+import { toast } from 'react-toastify';
 
 export default function ProductDetails() {
+    const [loading, setLoading] = useState(false);
     const { user } = useUser();
     const { id } = useParams();
     const [product, setProduct] = useState({ produce: {}, harvests: [] });
@@ -10,6 +13,7 @@ export default function ProductDetails() {
 
     useEffect(() => {
         const fetchProduct = async () => {
+            setLoading(true);
             try {
                 const res = await fetch(
                     `https://advisory-tallou-sobhanbose-a5410a15.koyeb.app/farmer/${user.phone}/harvest/${id}`
@@ -24,11 +28,14 @@ export default function ProductDetails() {
                     );
                     setSelectedHarvest(sorted[0]);
                 } else {
+                    toast.error('Something went wrong!');
                     console.error('Failed to fetch product:', data);
                 }
             } catch (error) {
+                toast.error('Something went wrong!');
                 console.error('Error fetching product:', error);
             }
+            setLoading(false);
         };
 
         fetchProduct();
@@ -42,11 +49,22 @@ export default function ProductDetails() {
         setSelectedHarvest(harvest);
     };
 
+    
+    if(loading){
+        return(
+            
+                <div className="flex justify-center items-center h-40">
+                <Loader type="bubble-loop" bgColor={"#0ee9ab"} color={"#0ee9ab"} title={"Loading..."} size={100} />
+              </div>
+        )
+    }
     if (!product.harvests.length || !selectedHarvest) {
         return <p className="p-6 text-gray-600">No Harvests Found</p>;
     }
 
     return (
+        <>
+        
         <div className="p-6">
             <h2 className="text-2xl font-bold mb-4">{product.produce.name}</h2>
             <img
@@ -89,5 +107,6 @@ export default function ProductDetails() {
                 </p>
             </div>
         </div>
+        </>
     );
 }
