@@ -35,6 +35,7 @@ class ShowProduce(SQLModel):
     tag: str | None = None
     # farmer: ShowFarmer
     harvest: showHarvestRef | None = None
+    farmer: ShowFarmer
 
     model_config = {"from_attributes": True}
 
