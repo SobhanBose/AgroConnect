@@ -36,7 +36,6 @@ def get_farmer(phone_no: int, db: SessionDep) -> responseModels.ShowFarmer:
     return responseModels.ShowFarmer(
         description=farmer.description,
         discount_percent=farmer.discount_percent,
-        inventory=len(farmer.inventory),
         user=responseModels.ShowUser(phone_no=farmer.user.phone_no, first_name=farmer.user.first_name, last_name=farmer.user.last_name, latitude=to_shape(farmer.user.location).y if farmer.user.location else None, longitude=to_shape(farmer.user.location).x if farmer.user.location else None),
     )
 
