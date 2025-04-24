@@ -18,7 +18,7 @@ class ShowFarmer(SQLModel):
     description: str | None = None
     discount_percent: float | None = None
     earnings: float | None = None
-    inventory: int = 0
+    # inventory: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -61,7 +61,7 @@ class ShowHarvest(SQLModel):
     harvest_date: date  # YYYY-MM-DD format
     rate: float  # Price in currency per kg or liter
     qty_available: int  # Quantity available for sale
-    produce: ShowProduce
+    produce: ShowProduceMinimal
 
     model_config = {"from_attributes": True}
 
