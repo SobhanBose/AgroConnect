@@ -8,13 +8,17 @@ class ShowUser(SQLModel):
     phone_no: int
     first_name: str | None = None
     last_name: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
     model_config = {"from_attributes": True}
 
 
 class ShowFarmer(SQLModel):
     description: str | None = None
-    user: ShowUser
+    discount_percent: float | None = None
+    earnings: float | None = None
+    inventory: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -36,6 +40,16 @@ class ShowProduce(SQLModel):
     # farmer: ShowFarmer
     harvest: showHarvestRef | None = None
     farmer: ShowFarmer
+
+    model_config = {"from_attributes": True}
+
+
+class ShowProduceMinimal(SQLModel):
+    id: UUID
+    name: str
+    description: str | None = None
+    image_path: str | None = None
+    tag: str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
+from geoalchemy2.shape import to_shape
 
 from app.v1 import models
 from app.v1.consumer import responseModels, schemas
@@ -19,7 +20,8 @@ def get_user(phone_number: int, db: SessionDep) -> responseModels.ShowUser:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return user
+
+    return responseModels.ShowUser(phone_no=user.phone_no, first_name=user.first_name, last_name=user.last_name, latitude=to_shape(user.location).y if user.location else None, longitude=to_shape(user.location).x if user.location else None, orders=len(user.orders))
 
 
 @router.put("/{phone_number}", response_model=responseModels.ShowUser, status_code=status.HTTP_200_OK)
