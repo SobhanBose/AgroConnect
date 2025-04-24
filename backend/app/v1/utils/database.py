@@ -13,13 +13,13 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL, future=True)
 
 
 def create_db_and_tables():
-    with engine.connect() as conn:
+    with engine.begin() as conn:
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-        conn.commit()
+        # conn.commit()
 
-    SQLModel.metadata.create_all(engine)
+        SQLModel.metadata.create_all(bind=conn)
 
-    with engine.connect() as conn:
+        # with engine.connect() as conn:
         conn.execute(text("""CREATE INDEX IF NOT EXISTS idx_user_location ON "user" USING GIST (location);"""))
         conn.commit()
 
