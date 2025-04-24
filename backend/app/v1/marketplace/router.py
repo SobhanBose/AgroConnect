@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
+from sqlalchemy import func
 from uuid import UUID
 from typing import Literal
 
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[responseModels.ShowProduceMinimal])
-def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
+def get_produce(db: SessionDep, phone_no: int, name: str | None = None, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
     if not name:
         produces = db.exec(select(models.Produce)).all()
     else:
@@ -21,6 +22,21 @@ def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate",
 
     if not produces:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="No produce found")
+
+    user = db.get(models.User, phone_no)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not user.location:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User location not found")
+
+    user_location = user.location
+    distance = func.ST_Distance(models.User.location, user_location)
+
+    stmt = select(models.Produce, distance.label("distance")).join(models.Farmer, models.Farmer.phone_no == models.Produce.farmer_phone_no).join(models.User, models.User.phone_no == models.Farmer.phone_no).where(models.User.location.isnot(None)).order_by(distance.asc())
+
+    results = db.exec(stmt).all()
+
+    produces = [result[0] for result in results]
 
     res = []
     for produce in produces:
@@ -58,6 +74,36 @@ def get_produce_by_tag(tag: produceTag, db: SessionDep, sortBy: Literal["rate", 
         return sorted(res, key=lambda x: x.harvest_date)
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sortBy parameter")
+
+
+@router.get("/nearby/{phone_no}", status_code=status.HTTP_200_OK, response_model=list[responseModels.FarmerNearbyResponse])
+def get_nearby_farmer(phone_no: int, db: SessionDep) -> list[responseModels.FarmerNearbyResponse]:
+    user = db.get(models.User, phone_no)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    user_location = user.location
+    distance = func.ST_Distance(models.User.location, user_location)
+
+    stmt = (
+        select(models.User, models.Farmer, distance.label("distance"))
+        .join(models.Farmer, models.Farmer.phone_no == models.User.phone_no)
+        .where(models.User.phone_no != phone_no)  # Exclude self
+        .where(models.User.location.isnot(None))
+        .order_by(distance.asc())
+    )
+
+    results = db.exec(stmt).all()
+
+    res = []
+    for user, farmer, distance in results:
+        if farmer.inventory:
+            for produce in farmer.inventory:
+                if produce.harvests:
+                    res.append(responseModels.FarmerNearbyResponse(description=farmer.description, distance_km=distance / 1000, user=user))
+                    break
+
+    return res
 
 
 @router.get("/{produce_id}", status_code=status.HTTP_200_OK, response_model=responseModels.HarvestGrouped)

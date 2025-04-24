@@ -126,6 +126,7 @@ def update_user(request: schemas.RegisterConsumerUpdate, db: database.SessionDep
 
     user.first_name = request.first_name
     user.last_name = request.last_name
+    user.location = request.to_place_model()
 
     try:
         db.add(user)
@@ -153,6 +154,7 @@ def update_farmer(request: schemas.RegisterFarmerUpdate, db: database.SessionDep
 
     farmer.user.first_name = request.first_name
     farmer.user.last_name = request.last_name
+    farmer.user.location = request.to_place_model()
     farmer.description = request.description
 
     try:

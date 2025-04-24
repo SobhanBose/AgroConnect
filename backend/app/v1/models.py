@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlmodel import Field, SQLModel, Relationship, Enum as SQLEnum, Column
 from sqlalchemy import BigInteger, ForeignKey
+from geoalchemy2 import Geography
 from uuid import uuid4, UUID
 from datetime import date
 
@@ -12,6 +13,7 @@ class User(SQLModel, table=True):
     first_name: str | None = None
     last_name: str | None = None
     is_active: bool = Field(default=False)
+    location: str | None = Field(sa_column=Column(Geography(geometry_type="POINT", srid=4326)), default=None)
 
     farmer: Optional["Farmer"] = Relationship(back_populates="user")
     cart: Optional["Cart"] = Relationship(back_populates="consumer")

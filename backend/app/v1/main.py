@@ -1,5 +1,6 @@
 from fastapi import FastAPI, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.v1.config import settings
 from app.v1.utils import database
