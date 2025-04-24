@@ -4,6 +4,7 @@ from datetime import date
 from typing import Optional
 
 from app.v1.utils import enumerations as enums
+from app.v1.farmer.responseModels import ShowHarvest
 
 
 class ShowOrderMinimal(SQLModel):
@@ -32,9 +33,9 @@ class ShowOrder(SQLModel):
 class ShowOrderItems(SQLModel):
     id: UUID
     order_id: UUID
-    harvest_id: UUID
     qty: int
     rate: float
+    harvest: ShowHarvest
     order: "ShowOrderMinimal"
 
     model_config = {"from_attributes": True}

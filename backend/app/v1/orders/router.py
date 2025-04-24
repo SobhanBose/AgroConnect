@@ -29,7 +29,7 @@ def save_transaction(order_id: str, transaction_request: schemas.TransactionCrea
         db.add(transaction)
         db.flush()  # Use flush to get the transaction ID before committing
 
-        order.transaction_id = transaction.id
+        order.transaction = transaction
         db.add(order)
 
         db.commit()
@@ -69,14 +69,15 @@ def create_order(phone_no: int, order_request: schemas.OrderCreate, db: SessionD
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart not found")
 
     order = models.Order(**order_request.model_dump(mode="json"), consumer_phone_no=phone_no, order_date=date.today(), total_amount=cart.total_amount, delivery_charges=30.0)
+    db.add(order)
+    db.flush()
 
     if order_request.payment_mode == enums.paymentMode.pod:
         transaction = models.Transaction(mode=enums.transactionMode.pod, utr="NA", order_id=order.id, amount=cart.total_amount, transaction_status=enums.transactionStatus.success, transaction_date=date.today())
         db.add(transaction)
         db.flush()  # Use flush to get the transaction ID before committing
-        order.transaction_id = transaction.id
+        order.transaction = transaction
 
-    db.add(order)
     db.flush()  # Use flush to get the order ID before committing
 
     order_items = [
