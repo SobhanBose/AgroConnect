@@ -14,7 +14,7 @@ router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[responseModels.ShowProduceMinimal])
-def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
+def get_produce(db: SessionDep, phone_no: int, name: str | None = None, sortBy: Literal["rate", "harvestDate"] | None = None) -> list[responseModels.ShowProduceMinimal]:
     if not name:
         produces = db.exec(select(models.Produce)).all()
     else:
@@ -22,6 +22,21 @@ def get_produce(db: SessionDep, name: str | None = None, sortBy: Literal["rate",
 
     if not produces:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="No produce found")
+
+    user = db.get(models.User, phone_no)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not user.location:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User location not found")
+
+    user_location = user.location
+    distance = func.ST_Distance(models.User.location, user_location)
+
+    stmt = select(models.Produce, distance.label("distance")).join(models.Farmer, models.Farmer.phone_no == models.Produce.farmer_phone_no).join(models.User, models.User.phone_no == models.Farmer.phone_no).where(models.User.location.isnot(None)).order_by(distance.asc())
+
+    results = db.exec(stmt).all()
+
+    produces = [result[0] for result in results]
 
     res = []
     for produce in produces:
