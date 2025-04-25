@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     APP_NAME: str
     DATABASE_URL: str
     DEV_MODE: bool
+    TWILIO_ACCOUNT_SID: str
+    TWILIO_AUTH_TOKEN: str
+    TWILIO_PHONE_NO: str
 
     class Config:
         env_file = ".env"

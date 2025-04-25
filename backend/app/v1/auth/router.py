@@ -42,18 +42,28 @@ def register(request: schemas.OTPRequest, user_type: Literal["consumer", "farmer
             )
 
         try:
+            db.flush()
+        except Exception as e:
+            print(e)
+            db.rollback()
+            return HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Database error",
+            )
+
+        try:
+            OTPManager.generate_otp(otp_length=4, phone_no=request.phone_no, db=db)
             db.commit()
             db.refresh(user)
             if user_type == "farmer":
                 db.refresh(farmer)
         except Exception as e:
             print(e)
+            db.rollback()
             return HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Database error",
+                detail="Error generating OTP",
             )
-
-        OTPManager.generate_otp(otp_length=4, phone_no=request.phone_no, db=db)
 
         return HTTPException(status_code=status.HTTP_200_OK, detail="User registered successfully")
 

@@ -2,6 +2,9 @@ import random
 from app.v1.utils.database import SessionDep
 from app.v1 import models
 from fastapi import HTTPException, status
+from twilio.rest import Client
+
+from app.v1.config import settings
 
 
 class OTPManager:
@@ -29,9 +32,12 @@ class OTPManager:
             record = models.OTP(phone_no=phone_no, otp=otp)
             db.add(record)
 
+        db.flush()
+
+        OTPManager.send_otp(phone_no, otp)
+
         db.commit()
         db.refresh(record)
-
         return True
 
     @classmethod
@@ -52,3 +58,16 @@ class OTPManager:
             return False
 
         return True
+
+    @classmethod
+    def send_otp(self, phone_no: int, otp: int) -> bool:
+        """
+        Sends the OTP to the user's phone number.
+
+        :param phone_no: The phone number to send the OTP to.
+        :return: True if the OTP was sent successfully, False otherwise.
+        """
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        message = client.messages.create(body=f"Your OTP to AgroConnect is {otp}", from_=settings.TWILIO_PHONE_NO, to=f"+91{phone_no}")
+
+        return message.sid is not None

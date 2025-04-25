@@ -18,6 +18,7 @@ class ShowFarmer(SQLModel):
     description: str | None = None
     discount_percent: float | None = None
     earnings: float | None = None
+    user: ShowUser
     # inventory: int = 0
 
     model_config = {"from_attributes": True}
