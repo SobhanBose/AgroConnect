@@ -32,7 +32,10 @@ def get_produce(db: SessionDep, phone_no: int, name: str | None = None, sortBy: 
     user_location = user.location
     distance = func.ST_Distance(models.User.location, user_location)
 
-    stmt = select(models.Produce, distance.label("distance")).join(models.Farmer, models.Farmer.phone_no == models.Produce.farmer_phone_no).join(models.User, models.User.phone_no == models.Farmer.phone_no).where(models.User.location.isnot(None)).order_by(distance.asc())
+    if not name:
+        stmt = select(models.Produce, distance.label("distance")).join(models.Farmer, models.Farmer.phone_no == models.Produce.farmer_phone_no).join(models.User, models.User.phone_no == models.Farmer.phone_no).where(models.User.location.isnot(None)).order_by(distance.asc())
+    else:
+        stmt = select(models.Produce, distance.label("distance")).join(models.Farmer, models.Farmer.phone_no == models.Produce.farmer_phone_no).join(models.User, models.User.phone_no == models.Farmer.phone_no).where(models.User.location.isnot(None)).where(models.Produce.name.contains(name)).order_by(distance.asc())
 
     results = db.exec(stmt).all()
 

@@ -14,5 +14,5 @@ class ProduceCreate(SQLModel):
 class HarvestCreate(SQLModel):
     produce_id: UUID  # UUID as string
     qty_harvested: int = Field(..., gt=0)  # Quantity in kg or liters
-    harvest_date: str  # YYYY-MM-DD format
+    harvest_date: str | None = None  # YYYY-MM-DD format
     rate: float = Field(..., gt=0)  # Price in currency per kg or liter

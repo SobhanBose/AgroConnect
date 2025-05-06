@@ -69,6 +69,7 @@ def get_produce(phone_no: int, db: SessionDep) -> list[responseModels.ShowProduc
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error while fetching produce",
         )
+
     return produces
 
 
@@ -280,11 +281,14 @@ def add_harvest(phone_no: int, harvest: schemas.HarvestCreate, db: SessionDep) -
         )
 
     try:
-        parsed_date = datetime.fromisoformat(harvest.harvest_date).date()
-        if parsed_date > datetime.today().date():
-            raise HTTPException(status_code=400, detail="Harvest date cannot be in the future.")
+        if harvest.harvest_date is None:
+            harvest.harvest_date = datetime.today().date()
+        else:
+            parsed_date = datetime.fromisoformat(harvest.harvest_date).date()
+            if parsed_date > datetime.today().date():
+                raise HTTPException(status_code=400, detail="Harvest date cannot be in the future.")
 
-        harvest.harvest_date = parsed_date
+            harvest.harvest_date = parsed_date
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
